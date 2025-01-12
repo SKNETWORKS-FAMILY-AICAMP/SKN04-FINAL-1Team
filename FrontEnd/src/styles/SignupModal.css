@@ -1,0 +1,143 @@
+.signup-overlay {
+    position: fixed;
+    display: flex;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+    z-index: 1400;
+}
+
+.signup-modal {
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+    /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); */
+    width: 300px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 90%;
+}
+
+.signup-modal input {
+    width: 90%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 15px;
+    height: 30px;
+}
+
+.signup-text-main h2 {
+    text-align: left;
+    font-size: 18px;
+    color: black;
+    height: 5px;
+}
+
+.signup-text-main {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex-grow: 1;
+}
+
+.signup-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.signup-header h2 {
+    font-size: 20px;
+    color: black;
+    height: 10px;
+}
+
+.signup-header button {
+    border: none;
+    background: white;
+    cursor: pointer;
+}
+
+.signup-header img {
+    width: 50px;
+    height: 50px;
+    margin-left: 10px;
+    margin-bottom: 20px;
+}
+
+
+.signup-modal-button {
+    margin-top: auto;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 10px;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer
+}
+
+.signup-loginbtn {
+    background: rgb(76, 181, 249);
+    color: white;
+    cursor: pointer;
+    border: none;
+    width: 100px;
+    height: 50px;
+    justify-content: center;
+}
+
+.signup-loginbtn.active {
+    background: rgb(0, 149, 246);
+    color: white;
+}
+
+.signup-loginbtn:disabled {
+    background: rgb(76, 181, 249);
+    color: white;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.signup-loginbtn:disabled:hover {
+    background: #ccc;
+}
+
+.signup-loginbtn:hover {
+    background: rgb(24, 119, 242);
+}
+
+.radio-container {
+    display: flex;
+    gap: 8px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.radio-button {
+    padding: 10px 20px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #666;
+    background-color: #f2f2f2;
+    transition: all 0.3s ease;
+}
+
+.radio-button.gender {
+    background-color: #6c63ff;
+    color: white;
+    font-weight: bold;
+    border: none;
+}

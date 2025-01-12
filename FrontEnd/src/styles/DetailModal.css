@@ -1,0 +1,45 @@
+.detail-overlay {
+    position: fixed;
+    top: 33%;
+    right: 0;
+    width: 100%;
+    height: auto;
+    display: flex;
+    justify-content: end;
+    /* 중앙에 모달 배치 */
+    align-items: center;
+    align-content: center;
+    z-index: 1400;
+    /* 다른 요소들 위에 표시 */
+}
+
+.detail-modal {
+    background: #fff;
+    /* 모달 배경을 흰색으로 설정 */
+    width: 300px;
+    max-width: 90%;
+    height: 100%;
+    padding: 20px;
+    border-radius: 8px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* 모달 헤더 스타일 */
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+/* 닫기 버튼 스타일 */
+.detail-closebtn {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+}

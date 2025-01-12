@@ -1,0 +1,47 @@
+.noticemodal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1500;
+}
+
+.noticemodal-modal {
+    background: #ddd;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 300px;
+    text-align: center;
+}
+
+.noticemodal-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.noticemodal-header h2 {
+    text-align: left;
+    font-size: 20px;
+}
+
+.noticemodal-header button {
+    border: none;
+    cursor: pointer;
+    background: transparent;
+    /* color: white; */
+    font-size: 30px;
+}
+
+.noticemodal-header img {
+    width: 50px;
+    height: 50px;
+    margin-left: 10px;
+    margin-bottom: 20px;
+}

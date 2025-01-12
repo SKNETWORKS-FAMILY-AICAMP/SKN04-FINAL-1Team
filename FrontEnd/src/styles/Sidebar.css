@@ -1,0 +1,119 @@
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 200px;
+  background: #f4f4f4;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  z-index: 1401;
+  transition: transform 0.3s ease-in-out, 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.sidebar.open {
+  transform: translateX(0);
+  /* max-width: 200px; */
+  opacity: 1;
+}
+
+.sidebar.closed {
+  transform: translateX(-100%);
+  /* max-width: 0; */
+  opacity: 0;
+}
+
+.sidebar.open+.sidebarToggle {
+  left: 10px;
+}
+
+.sidebar.closed+.sidebarToggle {
+  left: 10px;
+}
+
+.sidebarToggle {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1401;
+  background: #ddd;
+  padding: 10px 15px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.2s ease;
+  /* 버튼 색상 전환 */
+}
+
+.sidebarToggle:hover {
+  background-color: white;
+}
+
+.btn {
+  margin-top: 50px;
+  padding: 10px;
+  flex-direction: column;
+}
+
+.btn button {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  margin: 5px 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.btn button:hover {
+  background: #f0f0f0;
+}
+
+.btn button img {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+}
+
+hr {
+  margin: 10px 0;
+  border: 0.5px solid #ddd;
+}
+
+.chat-header {
+  padding: 10px;
+  /* background: #007BFF; */
+  color: black;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1401;
+  /* 헤더가 항상 위에 보이게 설정 */
+}
+
+.chat-body {
+  padding: 10px;
+  height: calc(100% - 40px);
+  /* overflow-y: auto; */
+  border-top: 1px solid #ddd;
+}
+
+/* 버튼 스타일 */
+.chat-header button {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.chat-header button:hover {
+  color: #ddd;
+}
+
+.chat-header img {
+  width: 50px;
+  height: 50px;
+}
