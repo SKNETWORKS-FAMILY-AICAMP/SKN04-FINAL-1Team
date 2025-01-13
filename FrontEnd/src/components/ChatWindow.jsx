@@ -63,7 +63,6 @@ const ChatWindow = ({ isSidebarOpen }) => {
         }
     }, [messages]);
 
-    // 메시지 전송 및 저장
     const sendMessage = async () => {
         if (input.trim()) {
             const userMessage = { role: 'user', content: input };
@@ -75,7 +74,8 @@ const ChatWindow = ({ isSidebarOpen }) => {
             localStorage.setItem('chatMessages', JSON.stringify(updatedMessages));
 
             try {
-                const response = await axios.post('http://127.0.0.1:8080/real_estate', 
+                const response = await axios.post(
+                    'http://localhost:8000/real_estate',
                     { query: input },
                     { headers: { 'Content-Type': 'application/json' } }
                 );
@@ -89,7 +89,12 @@ const ChatWindow = ({ isSidebarOpen }) => {
                 localStorage.setItem('chatMessages', JSON.stringify(newMessages));
             } catch (error) {
                 console.error('Error:', error);
-                const errorMessage = { role: 'assistant', content: '오류 발생. 다시 시도해주세요.' };
+
+                // 오류 메시지를 사용자에게 출력
+                const errorMessage = {
+                    role: 'assistant',
+                    content: error.response?.data?.error || '오류 발생. 다시 시도해주세요.',
+                };
                 setMessages([...updatedMessages, errorMessage]);
                 localStorage.setItem('chatMessages', JSON.stringify(updatedMessages));
             } finally {
@@ -97,7 +102,6 @@ const ChatWindow = ({ isSidebarOpen }) => {
             }
         }
     };
-
     // 즐겨찾기 추가 함수
     const toggleFavorite = (message) => {
         const updatedFavorites = favorites.includes(message)
