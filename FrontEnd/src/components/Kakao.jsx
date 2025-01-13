@@ -58,7 +58,9 @@ const InfoWindowContent = ({ markerInfo, onOpenDetailModal }) => {
         AI 추천 이유!
       </span>
       <br />
-      <span>{description}</span>
+      <div className='preserved-text'>
+        {description}
+      </div>
       <button
         className='detail-btn'
         onClick={() => onOpenDetailModal(markerInfo)}>
@@ -90,15 +92,31 @@ export default function Kakao() {
   useEffect(() => {
     const dummyMarkers = [
       {
-        name: "더미 매물",
-        latitude: 37.5665,
-        longitude: 126.9780,
-        deposit: 50000,
-        sale_price: 0,
-        monthly_rent: 500,
-        description: "test",
-        rental_type: "YEARLY",
-        move_in_type: "IMMEDIATE"
+        name: "서초푸르지오써밋",
+        latitude: 37.501493,
+        longitude: 127.0217076,
+        deposit: 980000000,
+        description: `상담 02-534-8949 / 문의 010-4355-0030
+
+◑ 매물 정보 ◑
+◈ 전세 금액: 10억 
+◈ 2025년 1월 입주 가능
+◈ 50평, 방 5개 욕실 2개 
+◈ 대형 거실과 넓은 침실
+◈ 구조 좋은 남향
+◈ 관리비 약 40만원
+◈ 신논현역, 언주역 도보 10분 거리
+◈ 쾌적하고 조용한 1동 아파트
+
+◐중개사 정보◑
+등록번호11650-2023-00068 (서초구)
+대표/공인중개사, 매경부동산자산관리사, 빌딩관리사1급 
+저희는 손님 유도 광고나 허위매물·과장 광고는 하지 않습니다.
+기타 궁금하신 사항은 전화 주시면 친절히 응대 도와드리겠습니다.
+상 담 02-534-8949 / 문 의 010-4355-0030
+감사합니다.`,
+        rental_type: "MONTHLY",
+        move_in_type: "AFTER"
       }
     ];
 
@@ -129,7 +147,7 @@ export default function Kakao() {
           markersData[0].latitude || 37.5665,
           markersData[0].longitude || 126.9780
         ),
-        level: 3,
+        level: 4,
       };
       const map = new window.kakao.maps.Map(container, options);
 
