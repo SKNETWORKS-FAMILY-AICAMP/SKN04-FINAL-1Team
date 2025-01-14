@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from db_config import engine
-from alter.models import Address
+from models import Address
 import requests
 import time
 from tqdm import tqdm

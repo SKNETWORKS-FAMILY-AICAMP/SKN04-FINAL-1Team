@@ -9,35 +9,35 @@ logger = logging.getLogger(__name__)
 
 # 서울시 OpenAPI 설정
 SEOUL_API_KEY = "7169716b6c786f643731576f535869"
-API_URL = f"http://openapi.seoul.go.kr:8088/{SEOUL_API_KEY}/xml/SPOP_LOCAL_RESD_JACHI/1/5/"
+API_URL = f"http://openapi.seoul.go.kr:8088/{SEOUL_API_KEY}/xml/SPOP_LOCAL_RESD_JACHI/1/25/"
 
 # 구청 코드와 구 이름 매핑
 DISTRICT_CODE_TO_ADDRESS = {
-    '11680': '강남구',
-    '11740': '강동구',
-    '11305': '강북구',
-    '11500': '강서구',
-    '11620': '관악구',
-    '11215': '광진구',
-    '11530': '구로구',
-    '11545': '금천구',
-    '11350': '노원구',
-    '11320': '도봉구',
-    '11230': '동대문구',
-    '11590': '동작구',
-    '11440': '마포구',
-    '11410': '서대문구',
-    '11650': '서초구',
-    '11200': '성동구',
-    '11290': '성북구',
-    '11710': '송파구',
-    '11470': '양천구',
-    '11560': '영등포구',
-    '11170': '용산구',
-    '11380': '은평구',
-    '11110': '종로구',
-    '11140': '중구',
-    '11260': '중랑구'
+    "11110": "종로구",
+    "11140": "중구",
+    "11170": "용산구",
+    "11200": "성동구",
+    "11215": "광진구",
+    "11230": "동대문구",
+    "11260": "중랑구",
+    "11290": "성북구",
+    "11305": "강북구",
+    "11320": "도봉구",
+    "11350": "노원구",
+    "11380": "은평구",
+    "11410": "서대문구",
+    "11440": "마포구",
+    "11470": "양천구",
+    "11500": "강서구",
+    "11530": "구로구",
+    "11545": "금천구",
+    "11560": "영등포구",
+    "11590": "동작구",
+    "11620": "관악구",
+    "11650": "서초구",
+    "11680": "강남구",
+    "11710": "송파구",
+    "11740": "강동구"
 }
 
 def get_district_population(district_code):
@@ -56,6 +56,7 @@ def get_district_population(district_code):
             # 해당 구의 데이터 찾기
             for row in root.findall('.//row'):
                 adstrd_code = row.find('ADSTRD_CODE_SE').text[:5]  # 앞 5자리만 사용
+               
                 if adstrd_code == district_code:
                     return float(row.find('TOT_LVPOP_CO').text)
         
@@ -189,7 +190,7 @@ def import_crime_stats(session):
 
 if __name__ == "__main__":
     from db_config import SessionLocal
-    from alter.models import Address
+    from models import Address
     
     # 로깅 설정 강화
     logging.basicConfig(

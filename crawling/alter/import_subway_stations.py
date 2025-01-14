@@ -36,12 +36,12 @@ def get_or_create_address(session, area_name, latitude=None, longitude=None):
         logger.error(f"주소 처리 중 오류: {str(e)}")
         return None
 
-def process_subway_data(session, address_id, data):
+def process_subway_data(session, address_id, line_info):
     """지하철역 데이터 처리"""
     try:
         station = SubwayStation(
             address_id=address_id,
-            line_info=data['line_info']
+            line_info=line_info
         )
         session.add(station)
         return station
@@ -65,19 +65,14 @@ def import_subway_stations(session):
                 area_name = row['역이름']
                 latitude = row['위도']
                 longitude = row['경도']
-                
+
                 # 주소 가져오기 또는 생성 (좌표 포함)
                 address = get_or_create_address(session, area_name, latitude, longitude)
-                
                 if address:
                     # 각 호선별로 별도의 레코드 생성
                     for line in row['호선정보']:
                         if line:  # 빈 문자열이 아닌 경우만 처리
-                            station_data = {
-                                'line_info': line.strip()
-                            }
-                            
-                            if process_subway_data(session, address.address_id, station_data):
+                            if process_subway_data(session, address.address_id, line):
                                 success_count += 1
                                 if success_count % 10 == 0:
                                     session.commit()

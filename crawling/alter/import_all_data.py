@@ -1,11 +1,11 @@
 from sqlalchemy.orm import Session
-from import_subway_stations import import_subway_stations
-from import_cultural_facilities import import_cultural_facilities
-from import_cultural_festivals import import_cultural_festivals
-from import_crime_stats import import_crime_stats
-from import_population_stats import import_population_stats
-from models import Base
-from import_utils import create_engine_and_session
+from .import_subway_stations import import_subway_stations
+from .import_cultural_facilities import import_cultural_facilities
+from .import_cultural_festivals import import_cultural_festivals
+from .import_crime_stats import import_crime_stats
+from .import_population_stats import import_population_stats
+from .models import Base
+from .import_utils import create_engine_and_session
 
 def import_all_data():
     try:

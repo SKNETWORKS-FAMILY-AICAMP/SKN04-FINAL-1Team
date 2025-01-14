@@ -145,4 +145,12 @@ def load_cultural_facilities():
     return all_facilities
 
 if __name__ == "__main__":
-    import_cultural_facilities() 
+    from db_config import SessionLocal
+    
+    session = SessionLocal()
+    try:
+        import_cultural_facilities(session)
+    except Exception as e:
+        print("메인 실행 중 오류 발생", exc_info=True)
+    finally:
+        session.close() 

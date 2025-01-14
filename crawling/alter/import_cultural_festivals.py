@@ -34,7 +34,7 @@ def import_cultural_festivals():
             try:
                 festival = {
                     'festival_name': row['FCLTY_NM'],
-                    'area_name': f"서울특별시 {row['RDNMADR_NM']}",
+                    'area_name': f"{row['RDNMADR_NM']}",
                     'begin_date': row['FSTVL_BEGIN_DE'],
                     'end_date': row['FSTVL_END_DE'],
                     'FCLTY_LA': row['FCLTY_LA'],
@@ -55,4 +55,18 @@ def import_cultural_festivals():
         return []
 
 if __name__ == "__main__":
-    import_cultural_festivals() 
+    from db_config import SessionLocal
+    
+    # 로깅 설정 강화
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s'
+    )
+    
+    session = SessionLocal()
+    try:
+        import_cultural_festivals(session)
+    except Exception as e:
+        logger.error("메인 실행 중 오류 발생", exc_info=True)
+    finally:
+        session.close() 

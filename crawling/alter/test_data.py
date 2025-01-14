@@ -142,47 +142,88 @@ def create_test_data():
         
         # 6. Favorite 테스트 데이터 - Property 테이블 데이터 확인 후 추가
         try:
-            # 먼저 property_info 테이블에서 실제 존재하는 property_id 확인
+            print("\n=== Favorite 데이터 생성 시작 ===")
+            # Property 테이블에서 실제 존재하는 매물 확인
             existing_properties = db.query(models.Property).limit(3).all()
+            print(f"조회된 매물 수: {len(existing_properties)}")
             
             if existing_properties:
-                favorites = [
-                    models.Favorite(
-                        user_uuid=users[0].uuid,
-                        item_id=existing_properties[0].property_id,
-                        item_type="property",
-                        name=existing_properties[0].building_name or "강남 역세권 원룸",
-                        latitude=float(existing_properties[0].location.latitude) if existing_properties[0].location else 37.4969,
-                        longitude=float(existing_properties[0].location.longitude) if existing_properties[0].location else 127.0278
-                    ),
-                    models.Favorite(
-                        user_uuid=users[1].uuid,
-                        item_id=existing_properties[1].property_id,
-                        item_type="property",
-                        name=existing_properties[1].building_name or "신논현 신축 투룸",
-                        latitude=float(existing_properties[1].location.latitude) if existing_properties[1].location else 37.5044,
-                        longitude=float(existing_properties[1].location.longitude) if existing_properties[1].location else 127.0246
-                    ),
-                    models.Favorite(
-                        user_uuid=users[2].uuid,
-                        item_id=existing_properties[2].property_id,
-                        item_type="property",
-                        name=existing_properties[2].building_name or "홍대입구 복층 원룸",
-                        latitude=float(existing_properties[2].location.latitude) if existing_properties[2].location else 37.5571,
-                        longitude=float(existing_properties[2].location.longitude) if existing_properties[2].location else 126.9245
-                    )
-                ]
-                db.add_all(favorites)
+                favorites = []
+                for i, property in enumerate(existing_properties):
+                    print(f"\n매물 {i+1} 처리 중:")
+                    print(f"- property_id: {property.property_id}")
+                    print(f"- building_name: {property.building_name}")
+                    print(f"- heating_type: {property.heating_type}")
+                    
+                    # 각 매물의 위치 정보 가져오기
+                    location = property.location
+                    print(f"- location 객체: {location}")
+                    
+                    latitude = float(location.latitude) if location else None
+                    longitude = float(location.longitude) if location else None
+                    print(f"- 위도/경도: {latitude}, {longitude}")
+                    
+                    # 기본 위치값 설정
+                    default_locations = [
+                        (37.4969, 127.0278),  # 강남
+                        (37.5044, 127.0246),  # 신논현
+                        (37.5571, 126.9245)   # 홍대입구
+                    ]
+                    
+                    # 위치 정보가 없는 경우 기본값 사용
+                    if latitude is None or longitude is None:
+                        latitude, longitude = default_locations[i]
+                        print(f"- 기본 위치값 사용: {latitude}, {longitude}")
+                    
+                    # 건물명이 없는 경우 사용할 기본 이름들
+                    default_names = [
+                        "강남 역세권 원룸",
+                        "신논현 신축 투룸", 
+                        "홍대입구 복층 원룸"
+                    ]
+                    
+                    name = property.building_name or default_names[i]
+                    print(f"- 사용할 이름: {name}")
+                    
+                    try:
+                        favorite = models.Favorite(
+                            user_uuid=users[i].uuid,
+                            item_id=property.property_id,
+                            item_type="property",
+                            name=name,
+                            latitude=latitude,
+                            longitude=longitude
+                        )
+                        favorites.append(favorite)
+                        print(f"- Favorite 객체 생성 성공")
+                    except Exception as e:
+                        print(f"- Favorite 객체 생성 실패: {str(e)}")
+                
+                try:
+                    print(f"\n총 {len(favorites)}개의 Favorite 데이터 추가 시도")
+                    db.add_all(favorites)
+                    print("Favorite 데이터 추가 성공")
+                except Exception as e:
+                    print(f"Favorite 데이터 일괄 추가 실패: {str(e)}")
             else:
-                print("Warning: property_info 테이블에 데이터가 없어 favorites 테스트 데이터를 생성하지 않습니다.")
+                print("경고: property_info 테이블에 데이터가 없어 즐겨찾기 테스트 데이터를 생성할 수 없습니다.")
         
         except Exception as e:
             print(f"Favorites 데이터 생성 중 오류: {str(e)}")
+            print(f"오류 타입: {type(e).__name__}")
+            import traceback
+            print("상세 오류:")
+            print(traceback.format_exc())
         
         # 변경사항 저장
-        db.commit()
-        print("테스트 데이터 생성 완료!")
-        
+        try:
+            print("\n=== 변경사항 저장 시도 ===")
+            db.commit()
+            print("테스트 데이터 생성 완료!")
+        except Exception as e:
+            print(f"커밋 중 오류 발생: {str(e)}")
+            db.rollback()
+            raise
     except Exception as e:
         print(f"테스트 데이터 생성 중 오류 발생: {str(e)}")
         db.rollback()
