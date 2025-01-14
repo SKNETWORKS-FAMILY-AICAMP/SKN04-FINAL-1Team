@@ -1,11 +1,32 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import (Column, Integer, String, Float, DateTime, Boolean, ForeignKey, 
-                       Text, JSON, DECIMAL, CHAR, Enum as SQLEnum, Index, func)
+                       Text, JSON, DECIMAL, CHAR, Enum as SQLEnum, Index, func, TypeDecorator)
 from sqlalchemy.orm import relationship, remote
 from datetime import datetime, timezone
 import uuid
-from enums import (PropertySubType, HeatingType, TransactionType, 
-                  LoanAvailability, MoveInType, Gender, MessageType, NoticeStatus, DirectionType, BuildingUseType, PropertyType)
+import json
+from enums import (HeatingType, TransactionType, 
+                  LoanAvailability, MoveInType, Gender, MessageType, NoticeStatus, DirectionType, BuildingUseType, PropertyType, NaverSubCategory)
+
+class JSONEncodedDict(TypeDecorator):
+    """JSON 데이터를 안전하게 처리하는 커스텀 타입"""
+    impl = Text
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            return json.dumps(value)
+        return '{}'
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            try:
+                return json.loads(value)
+            except (ValueError, TypeError):
+                return {}
+        return {}
+
+def default_json():
+    return {}
 
 Base = declarative_base()
 
@@ -204,7 +225,7 @@ class Property(Base):
     id = Column(Integer, primary_key=True)
     property_id = Column(Integer, ForeignKey('property_locations.property_id'), unique=True, nullable=False)
     property_type = Column(SQLEnum(PropertyType), nullable=False)
-    property_subtype = Column(SQLEnum(PropertySubType), nullable=False)
+    property_subtype = Column(SQLEnum(NaverSubCategory), nullable=False)
     building_name = Column(String(100), nullable=True)
     detail_address = Column(String(200), nullable=True)
     construction_date = Column(String(10))
@@ -216,21 +237,21 @@ class Property(Base):
     room_count = Column(Integer, nullable=True)
     bathroom_count = Column(Integer, nullable=True)
     parking_count = Column(Integer, nullable=True)
-    heating_type = Column(SQLEnum(HeatingType), nullable=True)
-    direction = Column(SQLEnum(DirectionType), nullable=True)
-    purpose_type = Column(SQLEnum(BuildingUseType), nullable=True)
+    heating_type = Column(SQLEnum(HeatingType), nullable=True, default=None)
+    direction = Column(SQLEnum(DirectionType), nullable=True, default=None)
+    purpose_type = Column(SQLEnum(BuildingUseType), nullable=True, default=None)
     current_usage = Column(String(100), nullable=True)
     recommended_usage = Column(String(100), nullable=True)
-    facilities = Column(JSON, nullable=True)
+    facilities = Column(JSONEncodedDict, nullable=True, default=default_json)
     description = Column(Text, nullable=True)
     move_in_type = Column(SQLEnum(MoveInType), nullable=True)
     move_in_date = Column(String(10), nullable=True)
-    loan_availability = Column(SQLEnum(LoanAvailability))
+    loan_availability = Column(SQLEnum(LoanAvailability), nullable=True, default=None)
     negotiable = Column(String(2), default='N')
-    photos = Column(JSON, nullable=True)
+    photos = Column(JSONEncodedDict, nullable=True, default=default_json)
     update_count = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
-    inactive_reason = Column(String(200))
+    inactive_reason = Column(String(200), nullable=True)
     first_seen = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     last_seen = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -238,6 +259,16 @@ class Property(Base):
     rentals = relationship("Rental", back_populates="property")
     sales = relationship("Sale", back_populates="property")
     favorites = relationship("Favorite", back_populates="property")
+
+    @property
+    def facilities_dict(self):
+        """facilities JSON 필드를 안전하게 가져오기"""
+        return self.facilities if isinstance(self.facilities, dict) else {}
+
+    @property
+    def photos_list(self):
+        """photos JSON 필드를 안전하게 가져오기"""
+        return self.photos if isinstance(self.photos, dict) else {}
 
 class Favorite(Base):
     __tablename__ = "favorites"
