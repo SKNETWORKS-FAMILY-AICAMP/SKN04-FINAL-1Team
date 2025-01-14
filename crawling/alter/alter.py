@@ -10,7 +10,9 @@ from typing import List
 from tqdm import tqdm
 from utils import setup_logger, batch_process, retry_on_failure
 from models import LoanAvailability, Base 
-from enums import SeoulDistrictCode, NaverSubCategory, HeatingType, CoolingType, MoveInType, LivingFacilityType, FacilityType, SecurityType, DirectionType, BuildingUseType, PropertyType
+from enums import (SeoulDistrictCode, NaverSubCategory, HeatingType, CoolingType, 
+                  MoveInType, LivingFacilityType, FacilityType, SecurityType, 
+                  DirectionType, BuildingUseType, PropertyType)
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 import re
@@ -26,9 +28,15 @@ main_logger = setup_logger('alter_main', 'logs/alter_main.log')
 error_logger = setup_logger('alter_error', 'logs/alter_error.log', level=logging.ERROR)
 db_logger = setup_logger('alter_db', 'logs/alter_db.log')
 
+# 디버그 로그 추가
+debug_logger = setup_logger('alter_debug', 'logs/alter_debug.log', level=logging.DEBUG)
+
 # 프로젝트 루트 디렉토리 설정
 BASE_DIR = Path(__file__).resolve().parent.parent
 DB_PATH = BASE_DIR / 'real_estate.db'
+
+debug_logger.info(f"BASE_DIR: {BASE_DIR}")
+debug_logger.info(f"DB_PATH: {DB_PATH}")
 
 # 비동기 엔진 설정
 async_engine = create_async_engine(
@@ -137,6 +145,8 @@ async def process_district(district_name, district_code, session, semaphore):
         'x-requested-with': 'XMLHttpRequest'
     }
 
+    debug_logger.info(f"[{district_name}] 크롤링 시작")
+    
     try:
         async with aiohttp.ClientSession(headers=headers) as client:
             async with AsyncSessionLocal() as db_session:
@@ -162,18 +172,28 @@ async def process_district(district_name, district_code, session, semaphore):
                         })
                     }
                     
+                    debug_logger.info(f"[{district_name}] 페이지 {page_no} 요청")
+                    debug_logger.debug(f"Payload: {payload}")
+                    
                     try:
                         async with client.post('https://www.rter2.com/hompyArticle/list', 
                                             data=payload) as response:
+                            debug_logger.info(f"[{district_name}] 응답 상태 코드: {response.status}")
+                            
                             if response.status == 200:
                                 text = await response.text(encoding='utf-8')
+                                debug_logger.debug(f"[{district_name}] 응답 데이터: {text[:200]}...")  # 처음 200자만 로깅
+                                
                                 try:
                                     data = json.loads(text)
                                     if 'result' in data and 'list' in data['result']:
                                         items = data['result']['list']
                                         if not items:
+                                            debug_logger.info(f"[{district_name}] 더 이상 데이터가 없음")
                                             break
                                             
+                                        debug_logger.info(f"[{district_name}] {len(items)}개 매물 발견")
+                                        
                                         async with db_session.begin():
                                             chunk_results = await process_district_chunk(
                                                 client, district_name, items, semaphore, db_session
@@ -189,18 +209,29 @@ async def process_district(district_name, district_code, session, semaphore):
                                         page_no += 1
                                         await asyncio.sleep(0.5)
                                     else:
+                                        debug_logger.warning(f"[{district_name}] 응답 데이터 형식이 올바르지 않음")
                                         break
                                         
-                                except json.JSONDecodeError:
+                                except json.JSONDecodeError as e:
+                                    error_logger.error(f"[{district_name}] JSON 파싱 오류: {str(e)}")
+                                    debug_logger.error(f"[{district_name}] 원본 텍스트: {text[:500]}...")  # 처음 500자만 로깅
                                     continue
+                                    
+                            else:
+                                error_logger.error(f"[{district_name}] HTTP 오류: {response.status}")
+                                debug_logger.error(f"[{district_name}] 응답 헤더: {response.headers}")
+                                await asyncio.sleep(1)
+                                continue
                                     
                     except Exception as e:
                         error_logger.error(f"[{district_name}] 요청 처리 오류: {str(e)}")
+                        debug_logger.exception(f"[{district_name}] 상세 오류:")
                         await asyncio.sleep(1)
                         continue
                         
     except Exception as e:
         error_logger.error(f"[{district_name}] 세션 오류: {str(e)}")
+        debug_logger.exception(f"[{district_name}] 상세 세션 오류:")
             
     main_logger.info(f"[{district_name}] 수집 완료: 총 {total_items}개 매물")
     return district_name, district_data
@@ -210,20 +241,28 @@ async def process_all_districts():
     connector = aiohttp.TCPConnector(
         ssl=False,
         ttl_dns_cache=300,
-        limit=30,  # 50에서 30으로 감소
+        limit=30,
         force_close=True,
         enable_cleanup_closed=True,
-        limit_per_host=5  # 10에서 5로 감소
+        limit_per_host=5
     )
     
     timeout = aiohttp.ClientTimeout(
-        total=1800,  # 600에서 1800초(30분)로 증가
+        total=1800,
         connect=60,
-        sock_read=120  # 60에서 120초로 증가
+        sock_read=120
     )
     
     async with aiohttp.ClientSession(
-        connector=connector,
+        connector=aiohttp.TCPConnector(
+            ssl=False,
+            ttl_dns_cache=300,
+            limit=30,
+            force_close=True,
+            enable_cleanup_closed=True,
+            limit_per_host=5,
+            # proxy="http://172.31.7.25:8080"
+        ),
         timeout=timeout,
         headers={
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -231,10 +270,9 @@ async def process_all_districts():
             'Referer': 'https://www.rter2.com',
             'Origin': 'https://www.rter2.com',
             'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
-        },
-        proxy='http://172.31.7.25:8080'  # 프록시 설정 추가
+        }
     ) as session:
-        semaphore = asyncio.Semaphore(3)  # 5에서 3으로 감소
+        semaphore = asyncio.Semaphore(3)
         
         total_progress = tqdm(
             total=len(SeoulDistrictCode),
@@ -526,8 +564,8 @@ async def process_district_chunk(client, district_name, items, semaphore, db_ses
                     # Property 데이터 준비
                     property_data = {
                         'property_id': item['seq'],
-                        'property_type': PropertyType(item.get('categoryCode')).name if item.get('categoryCode') else '',
-                        'property_subtype': NaverSubCategory(detail_item.get('subCategoryCode')).name if detail_item.get('subCategoryCode') else '',
+                        'property_type': PropertyType(item.get('categoryCode')).name if item.get('categoryCode') else "NULL",
+                        'property_subtype': NaverSubCategory(detail_item.get('subCategoryCode')).name if detail_item.get('subCategoryCode') else "NULL",
                         'building_name': detail_item.get('buildingName', ''),
                         'detail_address': detail_item.get('detailAddress', ''),
                         'construction_date': detail_item.get('useApproveDay', ''),
@@ -539,9 +577,9 @@ async def process_district_chunk(client, district_name, items, semaphore, db_ses
                         'room_count': detail_item.get('room', 0),
                         'bathroom_count': detail_item.get('restroom', 0),
                         'parking_count': detail_item.get('parkingCount', 0),
-                        'heating_type': HeatingType(detail_item.get('heatTypeCode')).name if detail_item.get('heatTypeCode') else '',
-                        'direction': DirectionType(detail_item.get('directionCode')).name if detail_item.get('directionCode') else '',
-                        'purpose_type': BuildingUseType(detail_item.get('lawUsageCode')).name if detail_item.get('lawUsageCode') else '',
+                        'heating_type': HeatingType(detail_item.get('heatTypeCode')).name if detail_item.get('heatTypeCode') else "NULL",
+                        'direction': DirectionType(detail_item.get('directionCode')).name if detail_item.get('directionCode') else "NULL",
+                        'purpose_type': BuildingUseType(detail_item.get('lawUsageCode')).name if detail_item.get('lawUsageCode') else "NULL",
                         'current_usage': detail_item.get('currentUsage', ''),
                         'recommended_usage': detail_item.get('recommendUsage', ''),
                         'facilities': json.dumps({
@@ -552,9 +590,9 @@ async def process_district_chunk(client, district_name, items, semaphore, db_ses
                         }),
                         'description': detail_item.get('description', ''),
                         'photos': process_photos(detail_item.get('photoList', [])),
-                        'move_in_type': MoveInType(detail_item.get('moveInTypeCode')).name if detail_item.get('moveInTypeCode') else '',
+                        'move_in_type': MoveInType(detail_item.get('moveInTypeCode')).name if detail_item.get('moveInTypeCode') else "NULL",
                         'move_in_date': detail_item.get('moveInDate', ''),
-                        'loan_availability': LoanAvailability(detail_item.get('loanCode', '')).name if detail_item.get('loanCode') else '',
+                        'loan_availability': LoanAvailability(detail_item.get('loanCode', '')).name if detail_item.get('loanCode') else "NULL",
                         'negotiable': detail_item.get('negotiationFlagCode', 'N')[-1],
                         'update_count': 0,
                         'is_active': True,
