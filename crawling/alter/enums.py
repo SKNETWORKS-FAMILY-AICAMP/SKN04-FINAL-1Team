@@ -50,6 +50,7 @@ class MoveInType(enum.Enum):
     INMONTH = "30063INMONTH" #개월 이내
     AFTERMONTH = "30063AFTERMONTH" #개월 이후
     AFTER = "30063AFTER" #이후
+    NULL = ""
 
 class PropertyType(enum.Enum):
     """매물 타입"""
@@ -80,55 +81,6 @@ class MoveInMonthType(enum.Enum):
     EARLY = "30064EARLY" #초순
     MID = "30064MID" #중순
     LATE = "30064LATE" #하순
-
-class PropertySubType(enum.Enum):
-    """매물 서브타입"""
-    APARTMENT = "APARTMENT"
-    COMPOUND = "COMPOUND"
-    RECONSTRUCT = "RECONSTRUCTION"
-    OFFICETEL = "OFFICETEL"
-    PRESALE_APT = "PRESALE_APT"
-    PRESALE_OFFICETEL = "PRESALE_OFFICETEL"
-    PRESALE_COMPOUND = "PRESALE_COMPOUND"
-    HOUSE = "HOUSE"
-    DUPLEX = "DUPLEX"
-    HOUSE_RESIDENTIAL = "HOUSE_RESIDENTIAL"
-    HOUSE_COMMERCIAL = "HOUSE_COMMERCIAL"
-    HOUSE_KOREAN = "HOUSE_KOREAN"
-    LAND = "LAND"
-    LAND2 = "LAND2"
-    ONE_ROOM = "ONE_ROOM"
-    COMMERCIAL = "COMMERCIAL"
-    OFFICE = "OFFICE"
-    FACTORY = "FACTORY"
-    FACTORY_KNOWLEDGE = "FACTORY_KNOWLEDGE"
-    REDEVELOPED = "REDEVELOPED"
-    BUILDING = "BUILDING"
-    BUILDING_COMMERCIAL = "BUILDING_COMMERCIAL"
-    BUILDING_ACCOMMODATION = "BUILDING_ACCOMMODATION"
-    BUILDING_ETC = "BUILDING_ETC"
-    NEW_APT_SALE = "NEW_APT_SALE"
-    NEW_021_SALE = "NEW_021_SALE"
-    NEW_041_SALE = "NEW_041_SALE"
-    NEW_051_SALE = "NEW_051_SALE"
-    NEW_071_SALE = "NEW_071_SALE"
-    MULTI_FAMILY = "MULTI_FAMILY"
-    # 네이버 서브카테고리 코드도 추가
-    NAVER_APARTMENT = '30001SC011'
-    NAVER_OFFICE_FLOOR = '30001SC021'
-    NAVER_APARTMENT_SALE = '30001SC031'
-    NAVER_DUPLEX = '30001SC041'
-    NAVER_COMMERCIAL_HOUSE = '30001SC044'
-    NAVER_SINGLE_FAMILY_HOUSE = '30001SC042'
-    NAVER_LAND = '30001SC051'
-    NAVER_ROOM = '30001SC061'
-    NAVER_COMMERCIAL = '30001SC071'
-    NAVER_OFFICE = '30001SC081'
-    NAVER_FACTORY = '30001SC091'
-    NAVER_KNOWLEDGE = '30001SC092'
-    NAVER_BUILDING = '30001SC111'
-    NAVER_COMMERCIAL_BUILDING = '30001SC112'
-    OTHER = "OTHER"
 
 class BuildingFeatureType(enum.Enum):
     """건축물 특징"""
@@ -172,12 +124,14 @@ class BuildingUseType(enum.Enum):
     CAMPGROUND_FACILITY = "30073USG29" #야영장 시설
     UNREGISTERED_BUILDING = "30073USG30" #미등기건물
     OTHER_SETTLEMENT = "30073USG31" #그 밖에 토지의 정착물
+    NULL = ""
 
 class HeatingType(enum.Enum):
     """난방방식 유형 코드"""
     SEPARATE = "30081SEPARATE" # 개별난방
     CENTER = "30081CENTER" # 중앙난방
     LOCAL = "30081LOCAL" # 지역난방
+    NULL = ""
 
 class HeatingFuel1(enum.Enum):
     """난방연료 유형 코드"""
@@ -189,14 +143,14 @@ class HeatingFuel1(enum.Enum):
     SUN = "30082SUN" # 태양열
     LPG = "30082LPG" # LPG
 
-class HeatingType2(enum.Enum):
-    """난방방식 유형 코드"""
-    SEPARATE = "20003SEPARATE" #개별난방
-    CENTER = "20003CENTER" #중앙난방
-    LOCAL = "20003LOCAL" #지역난방
-    SEPARATECOLD = "20003SEPARATECOLD" #개별냉난방
-    CENTERCOLD = "20003CENTERCOLD" #중앙냉난방
-    NONE = "20003NONE" #선택안함
+# class HeatingType2(enum.Enum):
+#     """난방방식 유형 코드"""
+#     SEPARATE = "20003SEPARATE" #개별난방
+#     CENTER = "20003CENTER" #중앙난방
+#     LOCAL = "20003LOCAL" #지역난방
+#     SEPARATECOLD = "20003SEPARATECOLD" #개별냉난방
+#     CENTERCOLD = "20003CENTERCOLD" #중앙냉난방
+#     NONE = "20003NONE" #선택안함
 
 class HeatingFuel2(enum.Enum):
     """난방연료 선택"""
@@ -382,6 +336,7 @@ class LoanAvailability(enum.Enum):
     NO_LOAN = "30053C010"     # 융자금 없음
     LOAN_UNDER_30 = "30053C011"    # 융자금 시세대비 30%미만
     LOAN_OVER_30 = "30053C012" # 시세대비 30%이상
+    NULL = ""
 
 class TransactionType(enum.Enum):
     """거래구분"""
