@@ -22,6 +22,12 @@ const Feedback = ({ isOpen, closeModal }) => {
     const createArray = (length) => [...Array(length)];
     const isButtonActive = starsQ1 !== 0 && starsQ2 !== 0 && starsQ3 !== 0 && sliderValue !== 0 && text.trim() !== '';
 
+    const handleOverlayClick = (e) => {
+        if (e.target.classList.contains('feedback-overlay')) {
+            closeModal();
+        }
+    };
+
 
     // 별점 컴포넌트 생성 함수
     const StarRating = ({ totalStars = 5, selectedStars, setSelectedStars }) => (
@@ -43,7 +49,7 @@ const Feedback = ({ isOpen, closeModal }) => {
     );
 
     return (
-        <div className='feedback-overlay'>
+        <div className='feedback-overlay' onClick={handleOverlayClick}>
             <div className='feedback-modal'>
                 <div className='feedback-header'>
                     <h3>피드백</h3>

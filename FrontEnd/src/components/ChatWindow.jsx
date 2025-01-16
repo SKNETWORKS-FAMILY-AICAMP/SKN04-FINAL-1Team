@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { motion, useMotionValue } from 'framer-motion';
 import '../styles/ChatWindow.css';
 
 const ChatWindow = ({ isSidebarOpen }) => {
@@ -8,7 +7,7 @@ const ChatWindow = ({ isSidebarOpen }) => {
     const [favorites, setFavorites] = useState([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [isOpen, setIsOpen] = useState(true);
+    const [isOpen, setIsOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const headerRef = useRef(null);
 
@@ -39,7 +38,6 @@ const ChatWindow = ({ isSidebarOpen }) => {
         window.removeEventListener('mouseup', onMouseUp);
     };
 
-    const API_KEY = '...'; // API_KEY는 안전하게 보관하세요!
     const textarea = useRef();
 
     // 메시지 창 마지막 요소에 대한 참조
@@ -53,7 +51,12 @@ const ChatWindow = ({ isSidebarOpen }) => {
         if (storedFavorites) setFavorites(JSON.parse(storedFavorites));
 
         const loggedInStatus = localStorage.getItem('isLoggedIn');
+        const isUserLoggedIn = loggedInStatus === 'true'
         setIsLoggedIn(loggedInStatus === 'true');
+
+        if (isUserLoggedIn) {
+            setIsOpen(true)
+        }
     }, []);
 
     // 메시지가 업데이트될 때마다 스크롤 맨 아래로 이동
@@ -75,7 +78,7 @@ const ChatWindow = ({ isSidebarOpen }) => {
 
             try {
                 const response = await axios.post(
-                    'http://localhost:8000/real_estate',
+                    'http://localhost:3000/real_estate',
                     { query: input },
                     { headers: { 'Content-Type': 'application/json' } }
                 );
@@ -112,7 +115,7 @@ const ChatWindow = ({ isSidebarOpen }) => {
     };
 
     const handleKeyDown = (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === 13 && !e.shiftKey) {
             e.preventDefault();
             sendMessage();
         }

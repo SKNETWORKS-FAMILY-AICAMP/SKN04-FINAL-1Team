@@ -17,17 +17,13 @@
 
 /* 모달 스타일 */
 .chatlog-modal {
-    background: #ddd;
+    background: white;
     width: 300px;
-    /* 모달 너비 */
-    /* max-width: 90%; */
-    height: 100%;
+    height: 90%;
     padding: 20px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     border-radius: 8px;
     position: relative;
-    margin-left: 200px;
-    /* opacity: 80%; */
+    margin-left: 220px;
 }
 
 /* 모달 헤더 스타일 */

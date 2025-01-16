@@ -1,31 +1,26 @@
 /* 백드롭(배경) 스타일 */
 .guide-backdrop {
     position: fixed;
-    /* 화면 전체를 덮기 위해 fixed 사용 */
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.3);
-    /* 반투명 배경 */
     display: flex;
     justify-content: flex-start;
-    /* 왼쪽에 모달 배치 */
     align-items: center;
     z-index: 1400;
-    /* 다른 요소들 위에 표시 */
 }
 
 /* 모달 스타일 */
 .guide-modal {
-    background: #ddd;
+    margin-left: 220px;
+    background: white;
     width: 300px;
-    height: 100%;
+    height: 90%;
     padding: 20px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     border-radius: 8px;
     position: relative;
-    margin-left: 200px;
     /* opacity: 80%; */
 }
 
@@ -50,7 +45,7 @@
     /* 필요한 스타일 추가 */
     max-height: 60vh;
     overflow-y: auto;
-    border: solid 1px;
+    border: 1px solid;
     border-color: #D3D3D3;
     border-radius: 10px;
     padding: 15px;

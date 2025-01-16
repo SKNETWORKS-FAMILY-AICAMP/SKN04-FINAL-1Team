@@ -55,7 +55,7 @@ const InfoWindowContent = ({ markerInfo, onOpenDetailModal }) => {
       <hr />
       <span className='recommend-reason'>
         <img src='/images/home.png' alt='aibot' />
-        AI 추천 이유!
+        AI 설명!
       </span>
       <br />
       <div className='preserved-text'>
@@ -130,7 +130,8 @@ export default function Kakao() {
           window.kakao.maps.load(() => initializeMap(dummyMarkers)); // dummyMarkers 사용
         };
         document.head.appendChild(script);
-      } else {
+      }
+      else {
         window.kakao.maps.load(() => initializeMap(dummyMarkers));
       }
     };
@@ -147,20 +148,20 @@ export default function Kakao() {
           markersData[0].latitude || 37.5665,
           markersData[0].longitude || 126.9780
         ),
-        level: 4,
+        level: 2,
       };
       const map = new window.kakao.maps.Map(container, options);
 
-      // 이벤트 리스너에 passive 옵션 추가
-      container.addEventListener('wheel', (event) => {
-        event.preventDefault();
-      }, { passive: true });
-      container.addEventListener('mousewheel', (event) => {
-        event.preventDefault();
-      }, { passive: true });
-      container.addEventListener('touchstart', (event) => {
-        event.preventDefault();
-      }, { passive: true });
+      // // 이벤트 리스너에 passive 옵션 추가
+      // container.addEventListener('wheel', (event) => {
+      //   event.preventDefault();
+      // }, { passive: false });
+      // container.addEventListener('mousewheel', (event) => {
+      //   event.preventDefault();
+      // }, { passive: false });
+      // container.addEventListener('touchstart', (event) => {
+      //   event.preventDefault();
+      // }, { passive: false });
 
       let openInfoWindow = null;
 

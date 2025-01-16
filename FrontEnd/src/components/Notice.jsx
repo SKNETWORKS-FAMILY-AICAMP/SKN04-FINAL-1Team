@@ -2,13 +2,11 @@ import { useEffect } from "react";
 import '../styles/Notice.css';
 import { useState } from "react";
 import NoticeModal from "./NoticeModal";
-import NoticeModal1 from "./NoticeModal1";
 
 const Notice = ({ isOpen, closeModal }) => {
     if (!isOpen) return null; // 모달이 닫혀있으면 렌더링하지 않음
 
     const [isOpenNoticeModal, setIsOpenNoticeModal] = useState('');
-    const [isOpenNoticeModal1, setIsOpenNoticeModal1] = useState('');
 
     // Esc 키를 눌러 모달 닫기
     const handleKeyDown = (e) => {
@@ -37,10 +35,6 @@ const Notice = ({ isOpen, closeModal }) => {
         setIsOpenNoticeModal(false);
     };
 
-    const openNoticeModal1 = () => {
-        setIsOpenNoticeModal1(true);
-    };
-
     return (
         <div className="notice-overlay" onClick={closeModal}>
             <div className="notice-modal" onClick={handleModalClick}>
@@ -63,17 +57,9 @@ const Notice = ({ isOpen, closeModal }) => {
                             첫번째 공지사항 내용입니다.
                         </div>
                     </button>
-                    <button className="notice-btn2" onClick={openNoticeModal1}>
-                        Test-Notice2
-                        <br />
-                        <div className="notice-body-text">
-                            test2
-                        </div>
-                    </button>
                 </div>
             </div>
             <NoticeModal isOpen={isOpenNoticeModal} onClose={closeNoticeModal} />
-            {/* <NoticeModal1 isOpen={isOpenNoticeModal1} onClose={closeNoticeModal1} /> */}
         </div>
     );
 };
