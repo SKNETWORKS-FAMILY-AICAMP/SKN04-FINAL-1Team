@@ -1,0 +1,183 @@
+version: '3'
+
+x-airflow-common: &airflow-common
+  image: apache/airflow:2.7.1
+  environment: &airflow-common-env
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres-airflow/airflow
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow/airflow
+    AIRFLOW__DATABASE__LOAD_DEFAULT_CONNECTIONS: 'true'
+    AIRFLOW_CONN_POSTGRES_DEFAULT: postgresql://airflow:airflow@postgres-airflow:5432/airflow
+    AIRFLOW_CONN_POSTGRES_DATA: 'postgresql+psycopg2://realestate:realestate123@postgres-data:5432/realestate'
+    POSTGRES_USER: airflow
+    POSTGRES_PASSWORD: airflow
+    POSTGRES_DB: airflow
+    POSTGRES_HOST: postgres
+    POSTGRES_PORT: 5432
+    AIRFLOW__SMTP__SMTP_HOST: your_smtp_host
+    AIRFLOW__SMTP__SMTP_PORT: '587'
+    AIRFLOW__SMTP__SMTP_USER: jeonhun6084@gmail.com
+    AIRFLOW__SMTP__SMTP_PASSWORD: your_password
+    AIRFLOW__SMTP__SMTP_MAIL_FROM: jeonhun6084@gmail.com
+    TOR_PASSWORD: '6084'
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./logs:/opt/airflow/logs
+    - ./plugins:/opt/airflow/plugins
+    - ./data:/opt/airflow/dags/data
+    - ./requirements.txt:/requirements.txt
+  depends_on:
+    postgres-airflow:
+      condition: service_healthy
+    postgres-data:
+      condition: service_healthy
+  networks:
+    - airflow-network
+
+services:
+  postgres-airflow:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-airflow-db-volume:/var/lib/postgresql/data
+      - ./airflow-init.sql:/docker-entrypoint-initdb.d/airflow-init.sql
+    networks:
+      - airflow-network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow", "-d", "airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-data:
+    image: postgis/postgis:13-3.3
+    environment:
+      POSTGRES_USER: realestate
+      POSTGRES_PASSWORD: realestate123
+      POSTGRES_DB: realestate
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data-db-volume:/var/lib/postgresql/data
+      - ./init-postgres.sql:/docker-entrypoint-initdb.d/init-postgres.sql
+    networks:
+      - airflow-network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "realestate", "-d", "realestate"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: ["postgres", "-c", "max_connections=1000", "-c", "shared_buffers=256MB"]
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - "8081:8080"
+    depends_on:
+      postgres-data:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    restart: always
+    networks:
+      - airflow-network
+    environment:
+      <<: *airflow-common-env
+      DATA_DB_HOST: postgres-data
+      DATA_DB_PORT: "5432"
+      DATA_DB_USER: realestate
+      DATA_DB_PASSWORD: realestate123
+      DATA_DB_NAME: realestate
+
+  scheduler:
+    <<: *airflow-common
+    command: >
+      bash -c "
+        mkdir -p /var/lib/apt/lists/partial &&
+        chmod -R 777 /var/lib/apt/lists &&
+        apt-get update &&
+        apt-get install -y tor &&
+        su airflow -c 'pip install --no-cache-dir -r /requirements.txt' &&
+        airflow scheduler
+      "
+    user: root
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+    networks:
+      - airflow-network
+    depends_on:
+      postgres-airflow:
+        condition: service_healthy
+      postgres-data:
+        condition: service_healthy
+    environment:
+      <<: *airflow-common-env
+      DATA_DB_HOST: postgres-data
+      DATA_DB_PORT: "5432"
+      DATA_DB_USER: realestate
+      DATA_DB_PASSWORD: realestate123
+      DATA_DB_NAME: realestate
+
+  init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db init && \
+        airflow db upgrade && \
+        airflow users create \
+          --username admin \
+          --password admin \
+          --firstname Anonymous \
+          --lastname Admin \
+          --role Admin \
+          --email jeonhun6084@gmail.com
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_UPGRADE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    restart: on-failure
+    depends_on:
+      postgres-airflow:
+        condition: service_healthy
+    networks:
+      - airflow-network
+
+  tor:
+    image: dperson/torproxy
+    ports:
+      - "9050:9050"
+      - "9051:9051"
+    environment:
+      - PASSWORD=6084
+    networks:
+      - airflow-network
+    restart: always
+
+volumes:
+  postgres-airflow-db-volume:
+  postgres-data-db-volume:
+
+networks:
+  airflow-network:
+    driver: bridge
+    name: airflow-network

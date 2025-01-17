@@ -3,7 +3,6 @@ import pandas as pd
 from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 # 모델 임포트
 from models import (
@@ -572,7 +571,7 @@ def create_addresses_from_all_sources(session):
     
     # 3. 지하철역 데이터에서 주소 추출
     try:
-        df = pd.read_csv('../data/지하철/seoul_subway_stations.csv')
+        df = pd.read_csv('./data/지하철/seoul_subway_stations.csv')
         for _, row in df.iterrows():
             area_name = row['역이름']  # 역 이름을 area_name으로 사용
             latitude = float(row['위도']) if pd.notna(row['위도']) else None
