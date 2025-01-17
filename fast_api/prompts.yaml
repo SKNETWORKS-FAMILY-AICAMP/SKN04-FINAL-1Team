@@ -1,0 +1,235 @@
+filter_system_prompt : |
+  Classify if a given question is related to real estate. If the question is related to topics such as property transactions, rental conditions, location recommendations, or property features, return Pass. If it's not directly related to real estate, return Fail.
+
+    # Output Format
+    - Return Pass if the question is real estate-related, otherwise return Fail.
+
+    # Examples
+    - 입력: '서울 아파트 매매 가격이 어떻게 되나요?'
+      출력: Pass
+
+    - 입력: '이 동네 전세 시세 알려주세요'
+      출력: Pass
+
+    - 입력: '서울에서 월세 계약 조건이 어떻게 되나요?'
+      출력: Pass
+
+    - 입력: '서울 아파트 매매가 얼마인가요?'
+      출력: Pass
+
+    - 입력: '대치동에서 버스정류장과 지하철이 가장 가까운 곳으로 알려줘'
+      출력: Pass
+
+    - 입력: '여자 혼자 살기 좋은 곳 추천해줘'
+      출력: Pass
+
+    - 입력: '교통이 편리하고 저렴한 원룸 추천해줘'
+      출력: Pass
+
+    - 입력: '이 음식점이 맛있나요?'
+      출력: Fail
+
+    - 입력: '서울에서 가장 큰 공원이 어디인가요?'
+      출력: Fail
+
+keyword_system_prompt : |
+  Extract relevant keywords from a user's question based on the database schema. Match the keywords to the following categories and their corresponding tables/columns:
+
+    1. **Location**:
+    - Table: `Location`
+    - Columns: `sido`, `sigungu`, `dong`
+
+    2. **Property Type**:
+    - Table: `Property`
+    - Column: `property_type` (e.g., apartment, villa, officetel)
+
+    3. **Price**:
+    - Tables: `Sale`, `Rental`
+    - Columns: `price`, `deposit`, `monthly_rent`
+
+    4. **Transaction Type**:
+    - Tables: `Sale`, `Rental`
+    - Columns: `rental_type` (e.g., 매매, 전세, 월세)
+
+    5. **Property Features**:
+    - Table: `Property`
+    - Columns: `room_count`, `bathroom_count`, `parking_count`, `exclusive_area`, `floor`
+
+    6. **User Preferences**:
+    - Table: `User`
+    - Columns: `desired_location`, `age`, `gender`
+
+    7. **Cultural/Facilities**:
+    - Tables: `Cultural Facility`, `Cultural Festival`
+    - Columns: `facility_name`, `festival_name`
+
+    8. **Safety and Crime Data**:
+    - Table: `Crime Stats`
+    - Columns: `crime_category`, `crime_rate`
+
+    # Output Format
+    Return the extracted keywords in JSON format with the following keys:
+    - "Location"
+    - "Property Type"
+    - "Price"
+    - "Transaction Type"
+    - "Property Features"
+    - "User Preferences"
+    - "Cultural/Facilities"
+    - "Safety and Crime Data"
+
+    If a category is not mentioned, return "없음".
+
+    # Examples
+    - Input: "서울 강남구에 있는 3억 이하 전세 아파트 찾아줘"
+    Output: {
+        "Location": "서울 강남구",
+        "Property Type": "아파트",
+        "Price": "3억 이하",
+        "Transaction Type": "전세",
+        "Property Features": "없음",
+        "User Preferences": "없음",
+        "Cultural/Facilities": "없음",
+        "Safety and Crime Data": "없음"
+    }
+
+    - Input: "용산구에서 안전한 주택 찾고 싶어요"
+    Output: {
+        "Location": "용산구",
+        "Property Type": "주택",
+        "Price": "없음",
+        "Transaction Type": "없음",
+        "Property Features": "없음",
+        "User Preferences": "없음",
+        "Cultural/Facilities": "없음",
+        "Safety and Crime Data": "안전"
+    }
+
+    - Input: "화장실 2개, 방 3개 있는 집 알려줘"
+    Output: {
+        "Location": "없음",
+        "Property Type": "없음",
+        "Price": "없음",
+        "Transaction Type": "없음",
+        "Property Features": "화장실 2개, 방 3개",
+        "User Preferences": "없음",
+        "Cultural/Facilities": "없음",
+        "Safety and Crime Data": "없음"
+    }
+
+base_prompt : |
+  다음 데이터베이스 구조를 기반으로 사용자의 질문에 대한 SQL 쿼리를 생성해주세요:
+
+  사용가능한 데이터 베이스 스키마:
+  {table}
+
+  주의사항:
+  1. 관련 조건은 SQL WHERE 절 형식으로 작성해주세요.
+  2. SQL 쿼리를 작성할 때는 명확하고 효율적이어야 합니다.
+  3. 결과는 최대 {top_k}개까지만 보여주세요.
+  4. 금액에 관련된 쿼리를 작성할 때는 쉼표(,)를 제거하고 숫자로 변환해야 합니다. 가능하다면, `WITH` 절 또는 서브쿼리를 사용하여 필드를 미리 변환하고 가독성을 높이세요.
+  5. 에러가 발생하면 원인을 설명하고 수정된 쿼리를 제시해주세요.
+  6. 텍스트 검색에는 LIKE 또는 MATCH ... AGAINST를 활용하세요.
+  7. 여러 조건은 AND 또는 OR로 연결하세요.
+  8. 정렬, 그룹화 등이 필요한 경우 이를 추가로 명시하세요. 예: ORDER BY created_at DESC.
+  9. 매물들을 정렬할 때 우선순위는 위치(1순위), 가격(2순위) 순 입니다.
+  10. 쿼리만 작성하고 추가 설명은 하지 마세요.
+  11. facilities는 영어로 쳐야지 나옵니다.
+      - pi.facilities LIKE '%ELEVATOR%' -> 엘리베이터
+      - pi.facilities LIKE '%aircon%' -> 에이컨, 에어콘
+  12. 매물번호도 함께 보여주세요 매물번호는 property_id입니다.
+
+  13. 지하철역에 관한 정보는 addresses 테이블의 area_name 칼럼에 있습니다.
+      - addresses.area_name LIKE '%강남역%' -> 강남역
+  14. subway_stations 테이블에는 지하철역이 아닌 지하철이 몇호선인지가 담겨있습니다.
+  15. subway_stations 테이블은 지하철 호선을 묻는 것이 아닌 이상 사용하지마시오.
+  16. "역세권"은 location_distances 테이블의 distance를 사용하면 됩니다.
+      - location_distances.distance <= 1000 -> "역세권"
+  17. property_type은 영어로 쳐야지 나옵니다.
+      - pi.property_type LIKE '%APARTMENT%' -> 아파트
+      - pi.property_type LIKE '%COMMERCIAL%' -> 상가
+
+
+rentals_prompt : |
+  18. rental_type 값은 다음과 같습니다:
+      - 'MONTHLY': 전세
+      - 'YEARLY': 월세
+  19. rentals 테이블에 price라는 컬럼이 없습니다. rentals 테이블에는 price 대신 deposit(보증금)과 monthly_rent(월세) 컬럼이 존재합니다.
+
+  ### 예시 질문과 쿼리:
+
+  - 질문: "서울시 강남구 보증금 2000에 월세 70짜리 추천해줘"
+
+  ```sql
+  SELECT 
+      r.property_id,
+      pi.description,
+      pi.facilities,
+      r.deposit AS "보증금",
+      r.monthly_rent AS "월세비",
+  FROM rentals r
+  JOIN property_info pi ON r.property_id = pi.property_id
+  JOIN property_locations l ON pi.property_location_id = l.property_location_id
+  WHERE l.sigungu LIKE '%강남구%'
+  AND r.rental_type = 'YEARLY'
+  AND CAST(REPLACE(r.deposit, ',', '') AS INTEGER) <= 20000000
+  AND CAST(REPLACE(r.monthly_rent, ',', '') AS INTEGER) <= 700000;
+  '''
+
+  - 질문: "강남역 역세권 전세 10억 추천해줘"
+
+  ```sql
+  SELECT DISTINCT
+      r.property_id,
+      pi.description,
+      pi.facilities,
+      r.deposit AS "보증금"
+  FROM rentals r
+  JOIN property_info pi ON r.property_id = pi.property_id
+  JOIN property_locations l ON pi.property_location_id = l.property_location_id
+  JOIN location_distances ld ON ld.property_location_id = pi.property_location_id
+  JOIN addresses a ON a.address_id = ld.address_id 
+  WHERE a.area_name LIKE '%강남역%'
+    AND r.rental_type = 'MONTHLY'
+    AND CAST(REPLACE(r.deposit, ',', '') AS INTEGER) <= 1000000000;
+  '''
+
+  사용자 질문: {user_query}
+
+sales_prompt : |
+  ### 예시 질문과 쿼리
+
+  - 질문: "서울시 강서구 10억짜리 매물 찾아줘"
+
+  ```sql
+  SELECT 
+      s.property_id,
+      pi.description,
+      pi.facilities,
+      s.price AS "가격"
+  FROM sales s
+  JOIN property_info pi ON s.property_id = pi.property_id
+  JOIN property_locations l ON pi.property_location_id = l.property_location_id
+  WHERE l.sigungu LIKE '%강서구%'
+  AND CAST(REPLACE(s.price, ',', '') AS INTEGER) <= 1000000000
+  '''
+
+  - 질문: "강동역 역세권 아파트 15억 추천해줘"
+
+  ```sql
+  SELECT DISTINCT 
+      s.property_id,
+      pi.description,
+      pi.facilities,
+      s.price AS "가격"
+  FROM sales s
+  JOIN property_info pi ON s.property_id = pi.property_id
+  JOIN property_locations l ON pi.property_location_id = l.property_location_id
+  JOIN location_distances ld ON ld.property_location_id = pi.property_location_id
+  JOIN addresses a ON a.address_id = ld.address_id
+  WHERE a.area_name LIKE '%강동역%'
+    AND CAST(REPLACE(s.price, ',', '') AS INTEGER) <= 1500000000;
+  '''
+
+  사용자 질문: {user_query}
+
