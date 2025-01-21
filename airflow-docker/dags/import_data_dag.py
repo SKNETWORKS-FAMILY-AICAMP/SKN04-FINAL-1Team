@@ -7,12 +7,14 @@ from alter.import_cultural_facilities import import_cultural_facilities
 from alter.import_cultural_festivals import import_cultural_festivals
 from alter.import_crime_stats import import_crime_stats
 from alter.import_real_estate import run_import_real_estate
+from alter.calculate_distances import calculate_distances
+from alter.update_address_coordinates import update_address_coordinates, update_missing_property_coordinates
 
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
     'email': ['jeonhun6084@gmail.com'],
-    'email_on_failure': True,
+    'email_on_failure': False,
     'email_on_retry': False,
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
@@ -30,7 +32,54 @@ with DAG(
     import_real_estate_data = PythonOperator(
         task_id='import_real_estate_data',
         python_callable=run_import_real_estate,
-        dag=dag_daily,
+    )
+    
+    calculate_distances_task = PythonOperator(
+        task_id='calculate_distances',
+        python_callable=calculate_distances,
+    )
+    
+    # 작업 순서 설정
+    import_real_estate_data >> calculate_distances_task
+
+# 매일 새벽 2시에 실행되는 DAG (주소 좌표 업데이트)
+with DAG(
+    'update_address_coordinates_daily',
+    default_args=default_args,
+    description='Update coordinates for addresses and properties daily',
+    schedule_interval=timedelta(days=1),
+    start_date=datetime(2025, 1, 1),
+    catchup=False
+) as dag_address:
+    # 1. 주소 좌표 업데이트 태스크
+    t1 = PythonOperator(
+        task_id='update_address_coordinates',
+        python_callable=update_address_coordinates,
+        dag=dag_address,
+    )
+
+    # 2. 매물 좌표 업데이트 태스크
+    t2 = PythonOperator(
+        task_id='update_property_coordinates',
+        python_callable=update_missing_property_coordinates,
+        dag=dag_address,
+    )
+
+    # 태스크 순서 설정
+    t1 >> t2
+
+# 수동 실행 DAG (거리 계산)
+with DAG(
+    'calculate_distances_manual',
+    default_args=default_args,
+    description='거리 계산 수동 실행',
+    schedule_interval=None,  # 수동 실행
+    start_date=pendulum.datetime(2024, 1, 1, tz='Asia/Seoul'),
+    catchup=False,
+) as dag_distances_manual:
+    calculate_distances_manual = PythonOperator(
+        task_id='calculate_distances_manual',
+        python_callable=calculate_distances,
     )
 
 # 분기별 실행되는 DAG (범죄 통계)
