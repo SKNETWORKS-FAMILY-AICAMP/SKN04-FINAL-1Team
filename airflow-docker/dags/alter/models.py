@@ -1,8 +1,10 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import (Column, Integer, String, Float, DateTime, ForeignKey, 
-                       Text, DECIMAL, Boolean, JSON)
+                       Text, DECIMAL, Boolean, JSON, BigInteger, Numeric, Index, UniqueConstraint)
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
+from sqlalchemy.types import TypeDecorator, String
+import json
 
 Base = declarative_base()
 
@@ -20,6 +22,7 @@ class Address(Base):
     cultural_festivals = relationship("CulturalFestival", back_populates="address")
     subway_stations = relationship("SubwayStation", back_populates="address")
     crime_stats = relationship("CrimeStats", back_populates="address")
+    distances = relationship("LocationDistance", back_populates="address")
 
 class CulturalFacility(Base):
     __tablename__ = 'cultural_facilities'
@@ -88,6 +91,28 @@ class PropertyLocation(Base):
     longitude = Column(Float)
     
     property = relationship("PropertyInfo", back_populates="location", uselist=False)
+    distances = relationship("LocationDistance", back_populates="property_location")
+
+class JSONType(TypeDecorator):
+    """JSON 타입을 처리하는 커스텀 타입"""
+    impl = String
+    
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            return json.dumps(value, ensure_ascii=False)
+        return None
+        
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            # JSON 문자열로 들어올 경우 처리
+            if isinstance(value, str):
+                try:
+                    value = value.replace('\\', '')
+                    return json.loads(value)
+                except json.JSONDecodeError:
+                    return value
+            return value
+        return None
 
 class PropertyInfo(Base):
     __tablename__ = 'property_info'
@@ -113,7 +138,7 @@ class PropertyInfo(Base):
     purpose_type = Column(String(50))
     current_usage = Column(String(100))
     recommended_usage = Column(String(100))
-    facilities = Column(JSON, default={})
+    facilities = Column(JSONType)
     description = Column(Text)
     move_in_type = Column(String(50))
     move_in_date = Column(String(10))
@@ -135,10 +160,10 @@ class Rental(Base):
     __table_args__ = {'schema': 'realestate'}
     
     id = Column(Integer, primary_key=True)
-    property_id = Column(Integer, ForeignKey('realestate.property_info.property_id'), unique=True, nullable=False)
-    rental_type = Column(String(50), nullable=False)
-    deposit = Column(DECIMAL(10,2), nullable=False)
-    monthly_rent = Column(DECIMAL(10,2), nullable=False)
+    property_id = Column(BigInteger, ForeignKey('realestate.property_info.property_id'), unique=True, nullable=False)
+    rental_type = Column(String)
+    deposit = Column(BigInteger, default=0)
+    monthly_rent = Column(BigInteger, default=0)
     
     property = relationship("PropertyInfo", back_populates="rentals")
 
@@ -147,9 +172,27 @@ class Sale(Base):
     __table_args__ = {'schema': 'realestate'}
     
     id = Column(Integer, primary_key=True)
-    property_id = Column(Integer, ForeignKey('realestate.property_info.property_id'), unique=True, nullable=False)
-    price = Column(DECIMAL(10,2), nullable=False)
-    end_date = Column(DateTime)
-    transaction_date = Column(DateTime)
+    property_id = Column(BigInteger, ForeignKey('realestate.property_info.property_id'), unique=True, nullable=False)
+    price = Column(BigInteger, default=0)
+    end_date = Column(String)
+    transaction_date = Column(String)
     
     property = relationship("PropertyInfo", back_populates="sales")
+
+class LocationDistance(Base):
+    __tablename__ = 'location_distances'
+    __table_args__ = (
+        Index('idx_location_distances_property', 'property_id'),
+        Index('idx_location_distances_address', 'address_id'),
+        UniqueConstraint('property_id', 'address_id', name='uq_property_address'),
+        {'schema': 'realestate'}
+    )
+    
+    id = Column(Integer, primary_key=True)
+    property_id = Column(Integer, ForeignKey('realestate.property_locations.property_id'), nullable=False)
+    address_id = Column(Integer, ForeignKey('realestate.addresses.id'), nullable=False)
+    distance = Column(Float, nullable=False)  # 미터 단위
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    property_location = relationship("PropertyLocation", back_populates="distances")
+    address = relationship("Address", back_populates="distances")
