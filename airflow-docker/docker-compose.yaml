@@ -1,7 +1,9 @@
 version: '3'
 
 x-airflow-common: &airflow-common
-  image: apache/airflow:2.7.1
+  build: 
+    context: .
+    dockerfile: Dockerfile
   environment: &airflow-common-env
     AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow/airflow
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres-airflow/airflow
@@ -23,19 +25,19 @@ x-airflow-common: &airflow-common
     AIRFLOW__SMTP__SMTP_PASSWORD: your_password
     AIRFLOW__SMTP__SMTP_MAIL_FROM: jeonhun6084@gmail.com
     TOR_PASSWORD: '6084'
-  volumes:
+  volumes: &airflow-common-volumes
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
     - ./data:/opt/airflow/dags/data
-    - ./requirements.txt:/requirements.txt
-  depends_on:
-    postgres-airflow:
-      condition: service_healthy
-    postgres-data:
-      condition: service_healthy
-  networks:
-    - airflow-network
+    - ./requirements.txt:/opt/airflow/requirements.txt
+  user: airflow
+
+x-airflow-depends-on: &airflow-common-depends-on
+  postgres-airflow:
+    condition: service_healthy
+  postgres-data:
+    condition: service_healthy
 
 services:
   postgres-airflow:
@@ -83,9 +85,6 @@ services:
     command: webserver
     ports:
       - "8081:8080"
-    depends_on:
-      postgres-data:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
       interval: 30s
@@ -96,71 +95,53 @@ services:
       - airflow-network
     environment:
       <<: *airflow-common-env
-      DATA_DB_HOST: postgres-data
-      DATA_DB_PORT: "5432"
-      DATA_DB_USER: realestate
-      DATA_DB_PASSWORD: realestate123
-      DATA_DB_NAME: realestate
+      AIRFLOW__WEBSERVER__SECRET_KEY: gkadudxo1234
 
-  scheduler:
+  airflow-scheduler:
     <<: *airflow-common
+    entrypoint: []
     command: >
-      bash -c "
-        mkdir -p /var/lib/apt/lists/partial &&
-        chmod -R 777 /var/lib/apt/lists &&
-        apt-get update &&
-        apt-get install -y tor &&
-        su airflow -c 'pip install --no-cache-dir -r /requirements.txt' &&
-        airflow scheduler
-      "
-    user: root
+      /bin/sh -c '
+        pip install --no-cache-dir -r /opt/airflow/requirements.txt;
+        /usr/local/bin/airflow scheduler
+      '
     healthcheck:
-      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
-      interval: 10s
+      test: ["CMD", "/usr/local/bin/airflow", "jobs", "check", "--job-type", "SchedulerJob", "--hostname", "${HOSTNAME}"]
+      interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 30s
     restart: always
     networks:
       - airflow-network
-    depends_on:
-      postgres-airflow:
-        condition: service_healthy
-      postgres-data:
-        condition: service_healthy
     environment:
       <<: *airflow-common-env
-      DATA_DB_HOST: postgres-data
-      DATA_DB_PORT: "5432"
-      DATA_DB_USER: realestate
-      DATA_DB_PASSWORD: realestate123
-      DATA_DB_NAME: realestate
+      PYTHONPATH: /opt/airflow
+      PATH: "/usr/local/bin:/home/airflow/.local/bin:${PATH}"
+    depends_on:
+      <<: *airflow-common-depends-on
+      init:
+        condition: service_completed_successfully
 
   init:
     <<: *airflow-common
-    entrypoint: /bin/bash
-    command:
-      - -c
-      - |
-        airflow db init && \
-        airflow db upgrade && \
-        airflow users create \
-          --username admin \
-          --password admin \
-          --firstname Anonymous \
-          --lastname Admin \
-          --role Admin \
-          --email jeonhun6084@gmail.com
+    command: version
     environment:
       <<: *airflow-common-env
       _AIRFLOW_DB_UPGRADE: 'true'
       _AIRFLOW_WWW_USER_CREATE: 'true'
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      _AIRFLOW_WWW_USER_USERNAME: admin
+      _AIRFLOW_WWW_USER_PASSWORD: admin
+      _AIRFLOW_WWW_USER_EMAIL: jeonhun6084@gmail.com
+      _AIRFLOW_WWW_USER_FIRSTNAME: Anonymous
+      _AIRFLOW_WWW_USER_LASTNAME: Admin
     restart: on-failure
+    networks:
+      - airflow-network
     depends_on:
       postgres-airflow:
         condition: service_healthy
-    networks:
-      - airflow-network
 
   tor:
     image: dperson/torproxy
@@ -172,6 +153,29 @@ services:
     networks:
       - airflow-network
     restart: always
+
+  django:
+    build: 
+      context: ./real_estate_api
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_NAME=realestate
+      - DB_USER=realestate
+      - DB_PASSWORD=realestate123
+      - DB_HOST=postgres-data
+      - DB_PORT=5432
+      - DATABASE_URL=postgresql://realestate:realestate123@postgres-data:5432/realestate
+      - DJANGO_SECRET_KEY=django-insecure-i0))6=p4h8#6kujj*)%i+&8h_+uu19#=(!=(owbep^qcv&j9#+
+      - DJANGO_DEBUG=True
+    volumes:
+      - ./real_estate_api:/app
+    depends_on:
+      - postgres-data
+    networks:
+      - airflow-network
+    command: sh -c "chmod +x /app/entrypoint.sh && /app/entrypoint.sh"
 
 volumes:
   postgres-airflow-db-volume:

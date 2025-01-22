@@ -11,7 +11,7 @@ from stem.control import Controller
 from fake_useragent import UserAgent
 import random
 import time
-from alter.models import PropertyLocation, PropertyInfo, Sale, Rental
+from alter.models import PropertyLocation, PropertyInfo, Sale, Rental, LocationDistance
 from alter.db_config import provide_session
 from alter.utils import main_logger as logger
 from .enums import (
@@ -69,6 +69,7 @@ class PropertyProcessor:
                 return False
 
             # 기존 데이터 삭제
+            self.session.query(LocationDistance).filter_by(property_id=property_id).delete()
             self.session.query(PropertyLocation).filter_by(property_id=property_id).delete()
             self.session.query(PropertyInfo).filter_by(property_id=property_id).delete()
             self.session.query(Sale).filter_by(property_id=property_id).delete()
@@ -233,7 +234,12 @@ class PropertyProcessor:
             # 한 번에 모든 기존 데이터 삭제 (순서 중요)
             if property_ids:
                 with self.session.begin_nested():
-                    # 1. 먼저 rentals와 sales 삭제 (자식 테이블)
+                    # 1. location_distances 테이블 먼저 삭제 (새로 추가)
+                    self.session.query(LocationDistance).filter(
+                        LocationDistance.property_id.in_(property_ids)
+                    ).delete(synchronize_session=False)
+                    
+                    # 2. rentals와 sales 삭제
                     self.session.query(Rental).filter(
                         Rental.property_id.in_(property_ids)
                     ).delete(synchronize_session=False)
