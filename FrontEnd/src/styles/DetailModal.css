@@ -1,45 +1,163 @@
 .detail-overlay {
     position: fixed;
-    top: 33%;
+    top: 10%;
+    bottom: 10%;
     right: 0;
-    width: 100%;
+    width: auto;
+    max-width: 700px;
     height: auto;
     display: flex;
     justify-content: end;
+    padding-right: 20px;
     /* 중앙에 모달 배치 */
     align-items: center;
     align-content: center;
     z-index: 1400;
+    overflow: visible;
     /* 다른 요소들 위에 표시 */
 }
 
 .detail-modal {
+    overflow: visible;
     background: #fff;
     /* 모달 배경을 흰색으로 설정 */
-    width: 300px;
+    width: auto;
     max-width: 90%;
     height: 100%;
     padding: 20px;
-    border-radius: 8px;
+    border-radius: 10px;
     position: relative;
     display: flex;
     flex-direction: column;
     gap: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1420;
 }
 
 /* 모달 헤더 스타일 */
 .detail-header {
     display: flex;
     justify-content: space-between;
+    /* margin-bottom: 15px; */
+    height: 30px;
     align-items: center;
-    margin-bottom: 15px;
 }
 
-/* 닫기 버튼 스타일 */
+
+.detail-header h2 {
+    top: 0px;
+}
+
 .detail-closebtn {
     background: transparent;
     border: none;
     font-size: 24px;
     cursor: pointer;
+}
+
+
+.detail-content {
+    overflow-y: auto;
+}
+
+.table-header {
+    border: 1px solid #ddd;
+    padding: 10px;
+    background-color: #f2f2f2;
+    width: 100px;
+    font-size: 17px;
+}
+
+.table-component {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+.detail-content-name {
+    font-size: 25px;
+    margin-top: 0;
+}
+
+.table-second {
+    border: 1px solid #ddd;
+    border-collapse: collapse;
+    width: 100%;
+    /* padding: 5px; */
+}
+
+
+.content-info {
+    border: 1px solid #ddd;
+    /* padding: 10px; */
+    background-color: #f2f2f2;
+    font-size: 17px;
+    height: 60px;
+}
+
+.content-markdown {
+    padding-left: 10px;
+}
+
+.tooltip-container {
+    position: relative;
+    display: inline-block;
+    /* 인라인 요소로 처리 */
+    cursor: pointer;
+
+    /* width: 100%; */
+}
+
+.tooltip-container .tooltip-text {
+    visibility: hidden;
+    width: 300px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    padding: 8px;
+    border-radius: 6px;
+    position: absolute;
+    z-index: 9999;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.tooltip-icon {
+    display: inline-block;
+    /* 인라인 요소라도 너비, 높이를 지정하려면 inline-block 사용 */
+    width: 17px;
+    /* 원하는 크기로 설정 (예: 24px) */
+    line-height: 17px;
+    height: 17px;
+    /* width와 동일하게 설정 */
+    border: 1px solid #635555;
+    /* 테두리 스타일 */
+    border-radius: 50%;
+    /* 원형으로 만들기 */
+    font-weight: bold;
+    font-size: 12px;
+    /* 선택 사항: 텍스트 강조 */
+    color: #635555;
+    /* padding-top: 5px; */
+}
+
+/* 툴팁 화살표 (선택 사항) */
+.tooltip-container .tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    /* tooltip 아래쪽에 화살표 위치 */
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+}
+
+/* hover 시 툴팁 보이게 */
+.tooltip-container:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
 }

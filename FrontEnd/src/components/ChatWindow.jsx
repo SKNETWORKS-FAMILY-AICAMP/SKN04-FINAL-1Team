@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import '../styles/ChatWindow.css';
+import ReactMarkdown from 'react-markdown'
 
 const ChatWindow = ({ isSidebarOpen }) => {
     const [messages, setMessages] = useState([]);
@@ -78,7 +79,7 @@ const ChatWindow = ({ isSidebarOpen }) => {
 
             try {
                 const response = await axios.post(
-                    'http://localhost:3000/real_estate',
+                    'http://127.0.0.1:8000/real_estate',
                     { query: input },
                     { headers: { 'Content-Type': 'application/json' } }
                 );
@@ -115,7 +116,7 @@ const ChatWindow = ({ isSidebarOpen }) => {
     };
 
     const handleKeyDown = (e) => {
-        if (e.key === 13 && !e.shiftKey) {
+        if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             sendMessage();
         }
@@ -150,7 +151,7 @@ const ChatWindow = ({ isSidebarOpen }) => {
                     <div className="chat-window-messages">
                         {messages.map((msg, index) => (
                             <div key={index} className={`chat-window-message ${msg.role}`}>
-                                {msg.content}
+                                <ReactMarkdown>{msg.content}</ReactMarkdown>
                                 <span
                                     className={`star-icon ${favorites.includes(msg.content) ? 'filled' : 'empty'}`}
                                     onClick={() => toggleFavorite(msg.content)}

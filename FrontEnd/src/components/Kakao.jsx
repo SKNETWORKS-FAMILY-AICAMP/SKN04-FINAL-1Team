@@ -3,75 +3,10 @@ import Sidebar from "./Sidebar";
 import ChatWindow from "./ChatWindow";
 import { useEffect, useState, useRef } from "react";
 import ErrorBoundary from './ErrorBoundary';
-import ReactDOMServer from 'react-dom/server';
 import DetailModal from './DetailModal.jsx';
 import axios from 'axios';
 
-const InfoWindowContent = ({ markerInfo, onOpenDetailModal }) => {
-  const { name, deposit, sale_price, monthly_rent, description, rental_type, move_in_type } = markerInfo;
-
-  // 가격 포맷 함수
-  const formatPrice = (price) => {
-    if (price === null || price === undefined) return "정보 없음";
-    return `${price.toLocaleString()}원`;
-  };
-
-  const monthlyYearlyClassification = (rental_type) => {
-    if (rental_type === 'MONTHLY') {
-      return '전세';
-    } else if (rental_type === 'YEARLY') {
-      return '월세';
-    }
-  };
-
-  const move_in_type_classification = (move_in_type) => {
-    if (move_in_type === 'IMMEDIATE') {
-      return '즉시 입주 가능';
-    } else if (move_in_type === 'AFTER') {
-      return '추후 입주 가능';
-    } else if (move_in_type === 'null') {
-      return '정보 없음';
-    }
-  };
-
-  return (
-    <div className="box">
-      <strong>{name}</strong>
-      <br />
-      <strong>유형: {monthlyYearlyClassification(rental_type)}</strong>
-      {rental_type === 'MONTHLY' && (
-        <>
-          <strong>전세가: {formatPrice(deposit)}</strong>
-          <strong> 즉시 입주: {move_in_type_classification(move_in_type)} </strong>
-        </>
-      )}
-      {rental_type === 'YEARLY' && (
-        <>
-          <strong>전세가: {formatPrice(deposit)}</strong>
-          <strong>월세: {formatPrice(monthly_rent)}</strong>
-          <strong> 즉시 입주: {move_in_type_classification(move_in_type)} </strong>
-        </>
-      )}
-      <hr />
-      <span className='recommend-reason'>
-        <img src='/images/home.png' alt='aibot' />
-        AI 설명!
-      </span>
-      <br />
-      <div className='preserved-text'>
-        {description}
-      </div>
-      <button
-        className='detail-btn'
-        onClick={() => onOpenDetailModal(markerInfo)}>
-        상세보기
-      </button>
-    </div>
-  );
-};
-
 export default function Kakao() {
-  // state 설정 (필요 없는 경우 삭제 가능)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -79,11 +14,13 @@ export default function Kakao() {
   const [selectedMarker, setSelectedMarker] = useState(null);
   const mapRef = useRef(null);
 
-  const openDetailModal = (markerInfo) => {
-    console.log('마커정보', markerInfo);
-    setSelectedMarker(markerInfo);
-    setIsDetailModalOpen(true);
-  };
+  // Kakao Map이 로드되기 전에, 전역 함수로 openDetailModal을 등록합니다.
+  useEffect(() => {
+    window.openDetailModal = (markerData) => {
+      setSelectedMarker(markerData);
+      setIsDetailModalOpen(true);
+    };
+  }, []);
 
   const closeDetailModal = () => {
     setIsDetailModalOpen(false);
@@ -96,6 +33,15 @@ export default function Kakao() {
         latitude: 37.501493,
         longitude: 127.0217076,
         deposit: 980000000,
+        monthly_rent: 3000,
+        address: '서울 서초구 서운로 201',
+        buildingCoverage: '18%',
+        floorAreaRatio: '299%',
+        apartmentNumber: '907 세대',
+        floor: '11층/35층',
+        area: '80A㎡, 81C㎡, 81B㎡, 100B㎡, 100A㎡, 112A㎡, 113B㎡, 130B㎡, 130A㎡, 137A㎡, 138C㎡, 138B㎡, 149㎡, 159A㎡, 160B㎡',
+        bathroom: '1개',
+        room: '3개',
         description: `상담 02-534-8949 / 문의 010-4355-0030
 
 ◑ 매물 정보 ◑
@@ -120,18 +66,17 @@ export default function Kakao() {
       }
     ];
 
-    // 카카오맵 로드
+    // 카카오맵 로드 함수
     const loadKakaoMap = () => {
       if (!window.kakao || !window.kakao.maps) {
         const script = document.createElement('script');
         script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=14184ad2e38efd5cb6898242be23f625&autoload=false&libraries=services`;
         script.async = true;
         script.onload = () => {
-          window.kakao.maps.load(() => initializeMap(dummyMarkers)); // dummyMarkers 사용
+          window.kakao.maps.load(() => initializeMap(dummyMarkers));
         };
         document.head.appendChild(script);
-      }
-      else {
+      } else {
         window.kakao.maps.load(() => initializeMap(dummyMarkers));
       }
     };
@@ -152,17 +97,6 @@ export default function Kakao() {
       };
       const map = new window.kakao.maps.Map(container, options);
 
-      // // 이벤트 리스너에 passive 옵션 추가
-      // container.addEventListener('wheel', (event) => {
-      //   event.preventDefault();
-      // }, { passive: false });
-      // container.addEventListener('mousewheel', (event) => {
-      //   event.preventDefault();
-      // }, { passive: false });
-      // container.addEventListener('touchstart', (event) => {
-      //   event.preventDefault();
-      // }, { passive: false });
-
       let openInfoWindow = null;
 
       // 각 마커를 지도에 추가
@@ -173,21 +107,39 @@ export default function Kakao() {
           map: map,
         });
 
-        // 정보창 추가
-        const content = ReactDOMServer.renderToString(
-          <InfoWindowContent markerInfo={markerInfo} onOpenDetailModal={openDetailModal} />
-        );
+        // InfoWindow에 들어갈 HTML 문자열
+        // 버튼의 onclick에서 window.openDetailModal()을 호출하며, markerInfo를 JSON 문자열로 전달합니다.
+        const content =
+          '<div class="wrap" style="border-radius: 10px;">' +  // inline 스타일 추가
+          '    <div class="info" style="border-radius: 10px;">' +
+          '        <div class="title">' +
+          `${markerInfo.name}` +
+          '            <div class="close" onclick="this.parentElement.parentElement.parentElement.style.display=\'none\'" title="닫기"></div>' +
+          '        </div>' +
+          '        <div class="body">' +
+          '            <div class="desc">' +
+          '                <div class="sigungu">시군구 넣을 예정</div>' +
+          '                <div class="recommend-reason">챗봇 추천 이유 넣을 예정</div>' +
+          `                <div class="ellipsis">${markerInfo.rental_type === 'monthly' ? '월세' : '전세'}</div>` +
+          `                <div class="ellipsis">${markerInfo.rental_type === 'monthly' ? markerInfo.deposit.toLocaleString() + '원' : markerInfo.monthly_rent.toLocaleString() + '원'}</div>` +
+          '                <button class="content-btn" onclick=\'window.openDetailModal(' + JSON.stringify(markerInfo) + ')\'>상세정보</button>' +
+          '            </div>' +
+          '        </div>' +
+          '    </div>' +
+          '</div>';
+
         const infowindow = new window.kakao.maps.InfoWindow({
           content: content,
         });
 
+        // 마커 클릭 시 InfoWindow 열기
         window.kakao.maps.event.addListener(marker, 'click', () => {
           if (openInfoWindow) openInfoWindow.close();
           infowindow.open(map, marker);
           openInfoWindow = infowindow;
         });
 
-        // 지도 클릭 시 정보창 닫기
+        // 지도 클릭 시 InfoWindow 닫기
         window.kakao.maps.event.addListener(map, 'click', () => {
           if (openInfoWindow) openInfoWindow.close();
         });
@@ -216,6 +168,7 @@ export default function Kakao() {
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       <ChatWindow isSidebarOpen={isSidebarOpen} />
       <ErrorBoundary />
+      {/* DetailModal 컴포넌트에 isOpen, closeModal, markerInfo props를 전달 */}
       <DetailModal isOpen={isDetailModalOpen} closeModal={closeDetailModal} markerInfo={selectedMarker} />
     </div>
   );

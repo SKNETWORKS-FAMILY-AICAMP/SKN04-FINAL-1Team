@@ -26,31 +26,24 @@
   border-radius: 10px;
 }
 
-.detail-btn {
-  border: none;
+.wrap {
+  width: 300px;
+  border-radius: 10px !important;
+}
+
+.wrap .info .body .desc .content-btn {
+  width: 100px;
+  /* 또는 원하는 너비 */
+  margin: 0 auto;
+  /* 부모 요소 내에서 가로 중앙 정렬 */
+  padding: 8px;
+  font-size: 14px;
   background-color: blue;
+  border: none;
+  border-radius: 5px;
   color: white;
-  border-radius: 10px;
-  width: 90%;
-  font-size: 20px;
-  cursor: pointer;
-  align-self: center;
+  display: flex;
   justify-content: center;
-}
-
-.recommend-reason {
   align-items: center;
-  color: blue;
-  font-size: 20px;
-}
-
-.recommend-reason img {
-  vertical-align: middle;
-  width: 30px;
-  height: 30px;
-  margin-right: 5px;
-}
-
-.preserved-text {
-  white-space: pre-wrap;
+  cursor: pointer;
 }

@@ -1,4 +1,6 @@
 import '../styles/ChatLog.css';
+import ReactMarkdown from 'react-markdown'
+
 
 const ChatLog = ({ isOpen, closeModal, loadSelectedChat }) => {
     if (!isOpen) return null;
@@ -34,7 +36,7 @@ const ChatLog = ({ isOpen, closeModal, loadSelectedChat }) => {
                             className={`chatlog-message ${msg.role}`}
                             onClick={handleSelectChat} // 클릭 이벤트 추가
                         >
-                            {msg.content}
+                            <ReactMarkdown>{msg.content}</ReactMarkdown>
                         </div>
                     ))}
                 </div>

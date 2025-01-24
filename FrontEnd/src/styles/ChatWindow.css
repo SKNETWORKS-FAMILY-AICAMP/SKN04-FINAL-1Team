@@ -72,12 +72,19 @@
 
 .chat-window-message.user {
     text-align: right;
-    color: blue;
+    color: #1565C0;
+    border: 1px solid rgb(200, 200, 200);
+    border-radius: 5px;
+    background-color: #e3f2fd;
 }
 
 .chat-window-message.assistant {
+    background-color: #fafaf0;
     text-align: left;
-    color: green;
+    color: #1b5e20;
+    border: 1px solid rgb(220, 220, 220);
+    padding-left: 2px;
+    border-radius: 5px;
 }
 
 .chat-window-message.loading {
