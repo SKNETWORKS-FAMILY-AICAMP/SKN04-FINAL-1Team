@@ -3,9 +3,8 @@ import { useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
 const Feedback = ({ isOpen, closeModal }) => {
-    if (!isOpen) return null; // 모달이 닫혀있으면 렌더링하지 않음
+    if (!isOpen) return null;
 
-    // 각 질문 별 별점 상태 설정
     const [starsQ1, setStarsQ1] = useState(0);
     const [starsQ2, setStarsQ2] = useState(0);
     const [starsQ3, setStarsQ3] = useState(0);
@@ -29,7 +28,6 @@ const Feedback = ({ isOpen, closeModal }) => {
     };
 
 
-    // 별점 컴포넌트 생성 함수
     const StarRating = ({ totalStars = 5, selectedStars, setSelectedStars }) => (
         <div className='feedback-star-container'
             style={{
@@ -42,7 +40,7 @@ const Feedback = ({ isOpen, closeModal }) => {
                 <Star
                     key={i}
                     selected={selectedStars > i}
-                    onClick={() => setSelectedStars(i + 1)} // 클릭 시 해당 질문 상태만 변경
+                    onClick={() => setSelectedStars(i + 1)}
                 />
             ))}
         </div>
@@ -78,9 +76,8 @@ const Feedback = ({ isOpen, closeModal }) => {
                     </div>
                 </div>
                 <div className='feedback-second-container'>
-                    <h2>챗봇을 평가해 주세요!!</h2>
+                    <h2>챗봇을 평가해 주세요!</h2>
 
-                    {/* 1번 질문 */}
                     <p>1. 챗봇의 응답이 이해하기 쉬웠나요?</p>
                     <StarRating
                         totalStars={5}
@@ -88,7 +85,6 @@ const Feedback = ({ isOpen, closeModal }) => {
                         setSelectedStars={setStarsQ1}
                     />
 
-                    {/* 2번 질문 */}
                     <p>2. 챗봇과의 대화가 자연스럽고 매끄러웠나요?</p>
                     <StarRating
                         totalStars={5}
@@ -96,7 +92,6 @@ const Feedback = ({ isOpen, closeModal }) => {
                         setSelectedStars={setStarsQ2}
                     />
 
-                    {/* 3번 질문 */}
                     <p>3. 챗봇을 통해 원하는 문제를 해결할 수 있었나요?</p>
                     <StarRating
                         totalStars={5}
@@ -112,7 +107,7 @@ const Feedback = ({ isOpen, closeModal }) => {
                 <div className='feedback-modal-btn'>
                     <button className={`feedback-sendbtn ${isButtonActive ? 'active' : ''}`}
                         disabled={!isButtonActive}>
-                        피드백 보내기
+                        제출하기
                     </button>
 
                 </div>

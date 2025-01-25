@@ -3,7 +3,6 @@ body {
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    /* 가로 스크롤바 제거 */
     width: 100%;
     height: 100%;
 }

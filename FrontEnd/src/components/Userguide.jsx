@@ -2,9 +2,8 @@ import { useEffect } from 'react'
 import '../styles/Userguide.css'
 
 const Userguide = ({ isOpen, closeModal }) => {
-    if (!isOpen) return null; // 모달이 닫혀있으면 렌더링하지 않음
+    if (!isOpen) return null;
 
-    // Esc 키를 눌러 모달 닫기
     const handleKeyDown = (e) => {
         if (e.key === 'Escape') {
             closeModal();
@@ -18,7 +17,6 @@ const Userguide = ({ isOpen, closeModal }) => {
         };
     }, []);
 
-    // 모달 내부 클릭 시 이벤트 전파 차단
     const handleModalClick = (e) => {
         e.stopPropagation();
     };

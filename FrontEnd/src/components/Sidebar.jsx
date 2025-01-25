@@ -26,7 +26,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   useEffect(() => {
     const storedLoginStatus = localStorage.getItem('isLoggedIn') === 'true';
-    setIsLoggedIn(storedLoginStatus); // 초기 로그인 상태 동기화
+    setIsLoggedIn(storedLoginStatus);
   }, []);
 
   const openModal = () => {
@@ -154,12 +154,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         </div>
       </div>
 
-      {/* 사이드바 토글 버튼 */}
       <button className='sidebarToggle' onClick={toggleSidebar}>
         {isOpen ? '<<' : '>>'}
       </button>
 
-      {/* 로그인 모달 렌더링 */}
       <LoginModal isOpen={isModalOpen} closeModal={closeModal} />
 
       <Notice isOpen={isNoticeOpen} closeModal={closeNotice} />

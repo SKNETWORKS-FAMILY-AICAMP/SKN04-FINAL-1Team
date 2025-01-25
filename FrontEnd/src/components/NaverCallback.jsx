@@ -4,24 +4,24 @@ import { useNavigate } from 'react-router-dom';
 
 const NaverCallback = () => {
     const navigate = useNavigate();
-    const isCalled = useRef(false); // 중복 호출 방지
+    const isCalled = useRef(false);
 
     useEffect(() => {
-        if (isCalled.current) return; // 중복 호출 방지
-        isCalled.current = true; // 호출 여부 설정
+        if (isCalled.current) return;
+        isCalled.current = true;
 
-        const code = new URL(window.location.href).searchParams.get('code'); // 인가 코드 추출
-        const state = new URL(window.location.href).searchParams.get('state'); // CSRF 공격 방지용 상태값 확인
+        const code = new URL(window.location.href).searchParams.get('code');
+        const state = new URL(window.location.href).searchParams.get('state');
 
         if (code && state) {
-            getToken(code, state); // 인가 코드로 액세스 토큰 요청
+            getToken(code, state);
         }
     }, []);
 
     const getToken = async (code, state) => {
-        const CLIENT_ID = 'HaY3V1fzfW0wBsqWdwyF'; // 네이버 클라이언트 ID
-        const CLIENT_SECRET = 'PYYXh95Wmx'; // 네이버 클라이언트 시크릿
-        const REDIRECT_URI = 'http://127.0.0.1:3000/naver/callback'; // 네이버 리다이렉트 URI
+        const CLIENT_ID = 'HaY3V1fzfW0wBsqWdwyF';
+        const CLIENT_SECRET = 'PYYXh95Wmx';
+        const REDIRECT_URI = 'http://127.0.0.1:3000/naver/callback';
 
         try {
             const response = await axios.post(
@@ -39,22 +39,19 @@ const NaverCallback = () => {
                 }
             );
 
-            // URL에서 인가 코드 제거
             window.history.replaceState({}, null, window.location.pathname);
 
             const accessToken = response.data.access_token;
             console.log('액세스 토큰:', accessToken);
 
-            // 사용자 정보 요청
             getUserInfo(accessToken);
         } catch (err) {
             console.error('토큰 요청 실패:', err);
 
-            // 실패 시에도 URL에서 인가 코드 제거
             window.history.replaceState({}, null, window.location.pathname);
 
             alert('로그인에 실패했습니다.');
-            navigate('/'); // 실패 시 메인 페이지로 이동
+            navigate('/');
         }
     };
 
@@ -62,27 +59,25 @@ const NaverCallback = () => {
         try {
             const response = await axios.get('https://openapi.naver.com/v1/nid/me', {
                 headers: {
-                    Authorization: `Bearer ${token}`, // 액세스 토큰 전달
+                    Authorization: `Bearer ${token}`,
                 },
             });
 
             console.log('사용자 정보:', response.data);
 
-            // 사용자 정보 저장 (로컬 스토리지)
             const userInfo = response.data.response;
             localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('email', userInfo.email); // 이메일 저장
+            localStorage.setItem('email', userInfo.email);
 
             alert(`환영합니다! ${userInfo.name}님`);
-            window.location.reload(); // 페이지 새로고침
+            window.location.reload();
         } catch (err) {
             console.error('사용자 정보 요청 실패:', err);
 
-            // 사용자 정보 요청 실패 시 URL 정리
             window.history.replaceState({}, null, window.location.pathname);
 
             alert('사용자 정보를 가져오지 못했습니다.');
-            navigate('/'); // 실패 시 메인 페이지로 이동
+            navigate('/');
         }
     };
 

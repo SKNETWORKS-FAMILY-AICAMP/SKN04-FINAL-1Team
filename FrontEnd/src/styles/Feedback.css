@@ -67,7 +67,7 @@
 .feedback-first-container {
     background-color: white;
     border-radius: 5px;
-    height: 250px;
+    height: 220px;
     font-size: 30px;
     border: 1px solid;
 }
@@ -82,6 +82,10 @@
     gap: 5px;
     flex-direction: column;
     text-align: center;
+}
+
+.feedback-slider-container-p {
+    margin-top: 5px;
 }
 
 .feedback-slider-img {
@@ -156,13 +160,13 @@
     font-size: 20px;
 }
 
-.feedback-modal-btn .sendbtn.active {
+.feedback-sendbtn.active {
     background: rgb(0, 149, 246);
     color: white;
     border: none;
 }
 
-.feedback-modal-btn .sendbtn:disabled {
+.feedback-sendbtn:disabled {
     background: rgb(76, 181, 249);
     color: white;
     cursor: not-allowed;
@@ -170,12 +174,7 @@
     border: none;
 }
 
-.feedback-modal-btn .sendbtn:disabled:hover {
-    background: #ccc;
-    border: none;
-}
-
-.feedback-modal-btn .sendbtn:hover {
+.feedback-sendbtn.active:hover {
     background: rgb(24, 119, 242);
     border: none;
 }

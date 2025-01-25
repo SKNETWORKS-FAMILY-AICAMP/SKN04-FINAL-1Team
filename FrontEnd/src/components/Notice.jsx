@@ -4,11 +4,11 @@ import { useState } from "react";
 import NoticeModal from "./NoticeModal";
 
 const Notice = ({ isOpen, closeModal }) => {
-    if (!isOpen) return null; // 모달이 닫혀있으면 렌더링하지 않음
+    if (!isOpen) return null;
 
     const [isOpenNoticeModal, setIsOpenNoticeModal] = useState('');
 
-    // Esc 키를 눌러 모달 닫기
+
     const handleKeyDown = (e) => {
         if (e.key === 'Escape') {
             closeModal();
@@ -22,7 +22,6 @@ const Notice = ({ isOpen, closeModal }) => {
         };
     }, []);
 
-    // 모달 내부 클릭 시 이벤트 전파 차단
     const handleModalClick = (e) => {
         e.stopPropagation();
     };

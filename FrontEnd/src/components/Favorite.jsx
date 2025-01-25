@@ -3,7 +3,6 @@ import '../styles/Favorite.css';
 const Favorite = ({ isOpen, closeModal }) => {
     if (!isOpen) return null;
 
-    // 로컬 스토리지에서 즐겨찾기 불러오기
     const savedFavorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
     const handleOverlayClick = (e) => {
