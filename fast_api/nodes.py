@@ -4,7 +4,8 @@ from langchain_core.messages import HumanMessage, SystemMessage, RemoveMessage
 from langchain_community.tools.sql_database.tool import QuerySQLDataBaseTool
 
 from utils import llm
-from database import insert_data_if_empty, db, model, collection
+from postgresql import db
+from chroma_db import model, collection, initialize_vector_db
 
 import json
 import os
@@ -127,43 +128,50 @@ def re_questions(state: RealEstateState) -> RealEstateState:
 
     return {'answers': output}
 
-def search_similar_questions(state: RealEstateState):  
+def find_similar_questions(state: RealEstateState) -> RealEstateState:
     """
     사용자의 질문을 벡터화하여 ChromaDB에서 유사한 질문을 검색.
-    threshold 값보다 낮은(유사한) 결과만 반환.
-    예시로 사용 예정
+    threshold 값보다 높은(유사한) 결과만 반환.
     """
+    initialize_vector_db()  # ✅ 벡터 DB 초기화
 
-    insert_data_if_empty()  # 데이터베이스에 데이터가 없으면 삽입
+    query = state["messages"][-1].content  # ✅ 최신 입력된 사용자 메시지
+    top_k = 5  # 검색할 유사 질문 개수
+    threshold = 0.7  # ✅ 코사인 유사도 기준 (1에 가까울수록 유사)
 
-    query = state["messages"][-1].content
-    top_k = 5
-    threshold = 0.5
+    # ✅ 입력된 질문을 벡터화
+    query_embedding = model.encode([query])[0].tolist()
 
-    query_embedding = model.embed_documents([query])[0]  # 입력 문장 벡터화
+    # ✅ ChromaDB에서 유사 질문 검색
     results = collection.query(
         query_embeddings=[query_embedding],
         n_results=top_k
     )
-    
+
+    # ✅ 유사도 변환 및 필터링 (코사인 유사도 사용)
     filtered_results = [
-        {"score": score, "full_question": doc.get("full_question"), "sql": doc.get("sql")}
+        {
+            "score": 1 - score,  # ✅ 코사인 거리 → 코사인 유사도로 변환 (1 - 거리)
+            "full_question": doc.get("question"),
+            "sql": doc.get("sql")
+        }
         for doc, score in zip(results["metadatas"][0], results["distances"][0])
-        if score < threshold  # 쓰레쉬홀드(임계값) 적용
+        if (1 - score) >= threshold  # ✅ 유사도 기준 필터링 (0.7 이상만 출력)
     ]
 
-    # 검색 결과 출력
+    # ✅ 검색 결과 출력
     if not filtered_results:
         print("❌ 유사한 질문이 없습니다.")
-        return {"vector_results" : "❌ 유사한 질문이 없습니다."}
+        return {"vector_results": "❌ 유사한 질문이 없습니다."}
 
     else:
         for i, res in enumerate(filtered_results):
-            print(f"🔍 [{i+1}] Score: {res['score']:.4f}")
-            print(f"📌 Question: {res['full_question']}")
-            print(f"📝 SQL: {res['sql']}\n")
+            print(f"🔍 [{i+1}] 유사도 점수: {res['score']:.4f}")  # ✅ 변환된 유사도 출력
+            print(f"📌 원본 질문: {res['full_question']}")
+            print(f"📝 연관 SQL: {res['sql']}\n")
 
-    return {"vector_results":filtered_results}  # 필터링된 문서 반환
+    return {"vector_results": filtered_results}  # ✅ 필터링된 유사 질문 반환
+
 
 def extract_keywords_based_on_db(state: RealEstateState) -> RealEstateState:
     system_prompt = prompts['keyword_system_prompt']
