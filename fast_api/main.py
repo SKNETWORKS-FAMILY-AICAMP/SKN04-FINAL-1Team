@@ -25,10 +25,16 @@ async def real_estate_info():
 async def stream_llm_response(query_text: str):
     try:
         for chunk in llm_app.stream({'messages': query_text}, config=config, stream_mode="messages"):
+            if chunk[1]['langgraph_node'] == "Re_Questions":
+                yield chunk[0].content + ""
+            if chunk[1]['langgraph_node'] == "No_Result_Answer":
+                yield chunk[0].content + ""
             if chunk[1]['langgraph_node'] == "Generate_Response":
                 yield chunk[0].content + ""
+
     except Exception as e:
         yield f"Error: {str(e)}\n"
+                
 
 # POST 요청: 사용자 입력 받아 AI 모델에 전달 (스트리밍 방식)
 @app.post("/real_estate")
