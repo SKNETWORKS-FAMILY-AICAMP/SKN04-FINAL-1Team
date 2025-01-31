@@ -189,17 +189,19 @@ def generate_query(state: RealEstateState) -> RealEstateState:
 
     print("[generate_query] 열심히 데이터베이스 쿼리문을 작성중입니다...")
 
-    if state['keywordlist'] == '매매':
+    keywordlist = state['keywordlist']
+
+    if keywordlist['Transaction Type'] == '매매':
         prompt = prompts['base_prompt'] + prompts['sales_prompt']
-        keywordlist = 'sales'
+        transaction_type = 'sales'
         
     else:
         prompt = prompts['base_prompt'] + prompts['rentals_prompt']
-        keywordlist = 'rentals'
+        transaction_type = 'rentals'
         
     table = db.get_table_info(table_names=[
         "addresses",
-        keywordlist,
+        transaction_type,
         "property_info",
         "property_locations",
         "location_distances",
@@ -212,8 +214,14 @@ def generate_query(state: RealEstateState) -> RealEstateState:
             user_query=state['messages'][-1].content
         )
     
-    if state['vector_results'] != '❌ 유사한 질문이 없습니다.':    
-        prompt = prompt + f"**유사한 질문 예시**:\n{state['vector_results']}"
+    if state['vector_results'] != '❌ 유사한 질문이 없습니다.':
+        examples = "\n".join(
+            [
+                f"- **질문:** {res['full_question']}\n  **SQL:** `{res['sql']}`"
+                for res in state['vector_results']
+            ]
+        )
+        prompt = prompt + f"\n\n**유사한 질문 예시:**\n{examples}"
     
     response = llm.invoke([
             SystemMessage(content="당신은 SQLite Database  쿼리를 생성하는 전문가입니다."),
@@ -261,6 +269,7 @@ def query_router(state: RealEstateState):
     else:
         return '결과있음'
     
+
 def no_result_answer(state: RealEstateState) -> RealEstateState:
     query = state['messages'][-1].content
 
@@ -276,8 +285,20 @@ def no_result_answer(state: RealEstateState) -> RealEstateState:
 
     return {'answers': output}
 
+
 def clean_result_query(state: RealEstateState) -> RealEstateState:
-    clean_result_query_prompt = prompts['clean_result_query_prompt']
+    base_prompt = prompts['clean_result_base_prompt']
+
+    keywordlist = state['keywordlist']
+
+    if keywordlist['Transaction Type'] == '전세' or keywordlist['Transaction Type'] == '없음':
+        clean_result_query_prompt = base_prompt + prompts['clean_result_yearly_rental_prompt']
+    
+    elif keywordlist['Transaction Type'] == '월세':
+        clean_result_query_prompt = base_prompt + prompts['clean_result_monthly_rental_prompt']
+    
+    else:
+        clean_result_query_prompt = base_prompt + prompts['clean_result_sale_prompt']
         
     user_prompt=f"{state['results']}"
 
@@ -290,12 +311,23 @@ def clean_result_query(state: RealEstateState) -> RealEstateState:
 
     return {"clean_results":output}
 
+
 def generate_response(state: RealEstateState)-> RealEstateState:
     print('[generate_response] 답변 생성중입니다...')
 
     data = state['clean_results']
+    keywordlist = state['keywordlist']
 
-    generate_response_prompt = prompts['generate_response_prompt'].format(data=data)
+    if keywordlist['Transaction Type'] == '전세' or keywordlist['Transaction Type'] == '없음':
+        money_info = "**💰 보증금:** [보증금]"
+    
+    elif keywordlist['Transaction Type'] == '월세':
+        money_info = "**💰 보증금:** [보증금]\n- **💰 월세:** [월세]"
+    
+    else:
+        money_info = "**💰 가격:** [가격]"
+
+    generate_response_prompt = prompts['generate_response_prompt'].format(money_info=money_info, data=data)
 
     user_prompt=f"""
     사용자의 질문: {state['messages'][-1].content}

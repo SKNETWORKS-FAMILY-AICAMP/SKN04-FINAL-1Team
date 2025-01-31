@@ -219,27 +219,28 @@ rentals_prompt : |
 
   17. rentals 테이블에 price라는 컬럼이 없습니다. rentals 테이블에는 price 대신 deposit(보증금)과 monthly_rent(월세) 컬럼이 존재합니다.
 
-  ### 예시 질문과 쿼리:
+  ### 월세 예시 질문과 쿼리:
 
   - 질문: "서울시 강남구 보증금 2000에 월세 70짜리 추천해줘"
 
   ```sql
-  SELECT DISTINCT pi.property_id, pi.facilities, pi.description, pi.direction, 
-        r.deposit, r.monthly_rent, pl.latitude, pl.longitude
+  SELECT DISTINCT pi.property_id, pi.facilities, pi.description, pi.direction, r.deposit, r.monthly_rent, pl.latitude, pl.longitude
   FROM property_info pi
   JOIN rentals r ON r.property_id = pi.property_id
   JOIN property_locations pl ON pl.property_id = pi.property_id
   WHERE pl.sigungu LIKE '%강남구%'
+  AND r.rental_type = '30051B2'
   AND r.deposit <= 20000000
   AND r.monthly_rent <= 700000
   limit 10;
   '''
 
+  ### 전세 예시 질문과 쿼리:
+
   - 질문: "강남역 역세권 전세 10억 추천해줘"
 
   ```sql
-  SELECT DISTINCT pi.property_id, pi.facilities, pi.description, pi.direction, 
-        r.deposit, pl.latitude, pl.longitude
+  SELECT DISTINCT pi.property_id, pi.facilities, pi.description, pi.direction, r.deposit, pl.latitude, pl.longitude
   FROM property_info pi
   JOIN rentals r ON r.property_id = pi.property_id
   JOIN property_locations pl ON pl.property_id = pi.property_id
@@ -260,8 +261,7 @@ sales_prompt : |
   - 질문: "서울시 강서구 10억짜리 매물 찾아줘"
 
   ```sql
-  SELECT DISTINCT pi.property_id, pi.facilities, pi.description, pi.direction, 
-        s.price, pl.latitude, pl.longitude
+  SELECT DISTINCT pi.property_id, pi.facilities, pi.description, pi.direction, s.price, pl.latitude, pl.longitude
   FROM property_info pi
   JOIN sales s ON s.property_id = pi.property_id
   JOIN property_locations pl ON pl.property_id = pi.property_id
@@ -274,8 +274,7 @@ sales_prompt : |
   - 질문: "강동역 역세권 아파트 15억 추천해줘"
 
   ```sql
-  SELECT DISTINCT pi.property_id, pi.facilities, pi.description, pi.direction, 
-        s.price, pl.latitude, pl.longitude, ld.distance
+  SELECT DISTINCT pi.property_id, pi.facilities, pi.description, pi.direction, s.price, pl.latitude, pl.longitude, ld.distance
   FROM property_info pi
   JOIN sales s ON s.property_id = pi.property_id
   JOIN property_locations pl ON pl.property_id = pi.property_id
@@ -287,7 +286,6 @@ sales_prompt : |
   AND ld.distance <= 500
   ORDER BY s.price desc
   limit 10;
-
   '''
 
   사용자 질문: {user_query}
@@ -313,120 +311,132 @@ no_result_answer_prompt : |
 
   답변 스타일은 친절하고, 자연스럽고, 적극적으로 도와주는 느낌을 주세요.
 
-clean_result_query_prompt : |
+clean_result_base_prompt : |
   다음은 부동산 매물 데이터입니다. 
 
   **아래 예제처럼 JSON 형식으로 데이터를 변환하세요.**
 
+clean_result_yearly_rental_prompt : |
   📌 **입력 데이터 예제 (SQL 결과)**
-  [(6882883, '{"cooling": null, "living": null, "security": null, "etc": "ELEVATOR"}', '매물번호 :  [P-12324]\r\n\r\n🟦 위치 : 교대역 도보 4분\r\n\r\n🟦 구조 : 업무홀 + 룸4 + 탕비실 + 테라스\r\n\r\n🟦 주차 : 무료\r\n\r\n🟦 A/C : 스탠드형1, 벽걸이형 3\r\n\r\n🟦 E/V  : O\r\n\r\n🟦 입주 : 즉시가능, 협의가능', 'WEST', 37.4939367, 127.0185953), (6883085, '{"cooling": "TOP", "living": null, "security": null, "etc": "ELEVATOR"}', '매물번호 :  [P-12326]\r\n\r\n🟦 위치 : 교대역 도보 1분\r\n\r\n🟦 주차 : 2대 무료\r\n\n\r\n🟦 A/C : 천장\r\n\r\n🟦 E/V  : O\r\n\r\n🟦 입주 : 즉시가능, 협의가능', 'SOUTH', 37.4938405, 127.0172511)]
+  [(6873474, '{"cooling": null, "living": null, "security": null, "etc": null}', '방3화1 2층전체사용 옥상사용 창고사용', 'SOUTHEAST', Decimal('220000000'), 37.5334162, 127.1438127), (6945735, '{"cooling": null, "living": null, "security": null, "etc": "VERANDA"}', '길동역세권\r\n다가구2층\r\n방3개\r\n넓음\r\n주차됨\r\n\r\nLH 및 SH 대출 안됨\r\n전세대출 조금 받는 사람', 'EAST', Decimal('230000000'), 37.5357676, 127.1434275)]
 
   
   📌 **출력해야 할 JSON 형식**
-
-  ### 매매일 때
   ```json
   [
       {
-          "property_id":6882883,
-          "price":null,
+          "property_id":6873474,
+          "deposit":220000000,
           "facilities":
               {
                   "cooling": null, 
                   "living": null, 
                   "security": null, 
-                  "etc": "ELEVATOR"
+                  "etc": null
               },
-          "description":"매물번호 :  [P-12324]\r\n\r\n🟦 위치 : 교대역 도보 4분\r\n\r\n🟦 구조 : 업무홀 + 룸4 + 탕비실 + 테라스\r\n\r\n🟦 주차 : 무료\r\n\r\n🟦 A/C : 스탠드형1, 벽걸이형 3\r\n\r\n🟦 E/V  : O\r\n\r\n🟦 입주 : 즉시가능, 협의가능",
-          "direction": "WEST",
-          "latitude": 37.4939367,
-          "longitude": 127.0185953
+          "description":"방3화1 2층전체사용 옥상사용 창고사용",
+          "direction": "SOUTHEAST",
+          "latitude": 37.5334162,
+          "longitude": 127.1438127
       },
       {
-      "property_id":6883085,
-      "price":null,
-      "facilities":
-          {
-              "cooling": "TOP", 
-              "living": null, 
-              "security": null, 
-              "etc": "ELEVATOR"
-          },
-      "description":"매물번호 :  [P-12326]\r\n\r\n🟦 위치 : 교대역 도보 1분\r\n\r\n🟦 주차 : 2대 무료\r\n\n\r\n🟦 A/C : 천장\r\n\r\n🟦 E/V  : O\r\n\r\n🟦 입주 : 즉시가능, 협의가능",
-      "direction": "SOUTH",
-      "latitude": 37.4938405,
-      "longitude": 127.0172511
-  }]
-
-  ### 전세일 때
-  ```json
-  [
-      {
-          "property_id":6882883,
-          "deposit":null,
+          "property_id":6945735,
+          "deposit":230000000,
           "facilities":
               {
                   "cooling": null, 
                   "living": null, 
                   "security": null, 
-                  "etc": "ELEVATOR"
+                  "etc": "VERANDA"
               },
-          "description":"매물번호 :  [P-12324]\r\n\r\n🟦 위치 : 교대역 도보 4분\r\n\r\n🟦 구조 : 업무홀 + 룸4 + 탕비실 + 테라스\r\n\r\n🟦 주차 : 무료\r\n\r\n🟦 A/C : 스탠드형1, 벽걸이형 3\r\n\r\n🟦 E/V  : O\r\n\r\n🟦 입주 : 즉시가능, 협의가능",
-          "direction": "WEST",
-          "latitude": 37.4939367,
-          "longitude": 127.0185953
-      },
-      {
-      "property_id":6883085,
-      "deposit":null,
-      "facilities":
-          {
-              "cooling": "TOP", 
-              "living": null, 
-              "security": null, 
-              "etc": "ELEVATOR"
-          },
-      "description":"매물번호 :  [P-12326]\r\n\r\n🟦 위치 : 교대역 도보 1분\r\n\r\n🟦 주차 : 2대 무료\r\n\n\r\n🟦 A/C : 천장\r\n\r\n🟦 E/V  : O\r\n\r\n🟦 입주 : 즉시가능, 협의가능",
-      "direction": "SOUTH",
-      "latitude": 37.4938405,
-      "longitude": 127.0172511
-  }]
+          "description":"길동역세권\r\n다가구2층\r\n방3개\r\n넓음\r\n주차됨\r\n\r\nLH 및 SH 대출 안됨\r\n전세대출 조금 받는 사람",
+          "direction": "EAST",
+          "latitude": 37.5357676,
+          "longitude": 127.1434275
+      }
+  ]
 
-  ### 월세일 때
+clean_result_monthly_rental_prompt : |
+  📌 **입력 데이터 예제 (SQL 결과)**
+  [(6866017, '{"cooling": "TOP", "living": "CLOSET,DINNINGTABLE,SHOESBOX,WASHER,SHOWERBOOTH,ELECTRONICRANGE", "security": "GUARD,CCTV", "etc": "ELEVATOR,FIREALARM"}', '♥같은자리 20년 경력만큼 미 노출중인 물건 다수 보유중\r\n♧새롬공인중개사사무소(포이초등학교앞) // {매수,매도,투자 문의환영}\r\n\r\n===================\r\n \r\n[매물특징] ------☆ 조건 제시해주시면 최대한 협의 해드리겠습니다\r\n\r\n★ 올리모델링,풀옵션, 주차가능, 에어컨 옵션까지 있는 욕실 큼\r\n☆ 방 2개 中 1개는 미닫이 방으로 거실처럼 활용가능 \r\n★ 엘레베이터 설치,주차 가능,준 신축 채광 좋은 건물\r\n# 위반건축물여부: 장애인주차장이전후데크설치/1층조립식패널(근생/관리실)\r\n <<해당 임대차...', 'SOUTHWEST', Decimal('50000000'), Decimal('1200000'), 37.4748937, 127.0511102), (6944899, '{"cooling": "TOP", "living": "SHOESBOX,WASHER,SINK,INDUCTIONRANGE", "security": "CCTV", "etc": "ELEVATOR"}', '♡ since 2003년 미 노출중인 A급 매물 다수 보유 중\r\n♣ 같은자리 20년이상 경력과 신뢰를 바탕으로 고객님 니즈에 맞춰서 최적의 컨설팅을 해드립니다.\r\n\r\n☎  02  576  7489     010  5162  7489  새롬 공인중개사사무소 (포이초등학교앞)\r\n\r\n----------------\r\n\r\n[매물정보]  ----월세만 가능합니다.!!!\r\n\r\n★ 25년 1월중순에 준공 및 개별 등기 예정 / 아직 준공전이라 대장상 정확한 면적이 아니므로 참고만 해주세요\r\n☆ 포이초및 국악고인근 개포4동 귀한 신축 첫입주...', 'WEST', Decimal('50000000'), Decimal('1900000'), 37.4784919, 127.0506472)]
+
+  
+  📌 **출력해야 할 JSON 형식**
   ```json
   [
       {
-          "property_id":6882883,
-          "deposit":null,
-          "monthly_rent":null,
+          "property_id":6866017,
+          "deposit":50000000,
+          "monthly_rent":1200000,
+          "facilities":
+              {
+                "cooling": "TOP", 
+                "living": "CLOSET,DINNINGTABLE,SHOESBOX,WASHER,SHOWERBOOTH,ELECTRONICRANGE", 
+                "security": "GUARD,CCTV", 
+                "etc": "ELEVATOR,FIREALARM"
+              },
+          "description":"♥같은자리 20년 경력만큼 미 노출중인 물건 다수 보유중\r\n♧새롬공인중개사사무소(포이초등학교앞) // {매수,매도,투자 문의환영}\r\n\r\n===================\r\n \r\n[매물특징] ------☆ 조건 제시해주시면 최대한 협의 해드리겠습니다\r\n\r\n★ 올리모델링,풀옵션, 주차가능, 에어컨 옵션까지 있는 욕실 큼\r\n☆ 방 2개 中 1개는 미닫이 방으로 거실처럼 활용가능 \r\n★ 엘레베이터 설치,주차 가능,준 신축 채광 좋은 건물\r\n# 위반건축물여부: 장애인주차장이전후데크설치/1층조립식패널(근생/관리실)\r\n <<해당 임대차...",
+          "direction": "SOUTHWEST",
+          "latitude": 37.4748937,
+          "longitude": 127.0511102
+      },
+      {
+          "property_id":6944899,
+          "deposit":50000000,
+          "monthly_rent":1900000,
+          "facilities":
+              {
+                  "cooling": "TOP", 
+                  "living": "SHOESBOX,WASHER,SINK,INDUCTIONRANGE", 
+                  "security": "CCTV", 
+                  "etc": "ELEVATOR"
+              },
+          "description":"♡ since 2003년 미 노출중인 A급 매물 다수 보유 중\r\n♣ 같은자리 20년이상 경력과 신뢰를 바탕으로 고객님 니즈에 맞춰서 최적의 컨설팅을 해드립니다.\r\n\r\n☎  02  576  7489     010  5162  7489  새롬 공인중개사사무소 (포이초등학교앞)\r\n\r\n----------------\r\n\r\n[매물정보]  ----월세만 가능합니다.!!!\r\n\r\n★ 25년 1월중순에 준공 및 개별 등기 예정 / 아직 준공전이라 대장상 정확한 면적이 아니므로 참고만 해주세요\r\n☆ 포이초및 국악고인근 개포4동 귀한 신축 첫입주...",
+          "direction": "WEST",
+          "latitude": 37.4784919,
+          "longitude": 127.0506472
+      }
+  ]
+
+clean_result_sale_prompt : |
+  📌 **입력 데이터 예제 (SQL 결과)**
+  [(6913778, '{"cooling": "TOP", "living": "REFRIGERATOR,WASHER,SINK", "security": "VIDEOPHONE,CCTV,DOOR", "etc": "ELEVATOR,FIREALARM"}', '★강력추천★ 로얄층 위치 선호도 좋은 신축\r\n\r\n디딤돌대출 / 신생아특례대출 / 주택담보대출 /각종 대출 및 매매 투자 //설명,안내 도와드립니다//\r\n대출에 대해서 잘 모르시는 사회 초년생 손님분들위해서 대출 설명,비교해드리고 있습니다!\r\n대출 및 투자방향 정확한 권리분석 안내로 매수인들의 안전한 계약을 약속드립니다.\r\n\r\n❤️ 방 상세설명❤️\r\n✨제가 직접 촬영한 100% 실매물입니다✨\r\n✔ -풀옵션, 로얄층으로 뻥뷰 막힘없어 채광좋음\r\n-확장형으로 실제평수는 약8평\r\n-임차인 맞추기좋음, 수익형으로...', 'SOUTHEAST', Decimal('220000000'), 37.4737423, 126.8909873), (6973289, '{"cooling": null, "living": null, "security": null, "etc": null}', '*전세 들어 있는 급매물 입니다.', 'SOUTHEAST', Decimal('170000000'), 37.4725293, 126.8878318)]
+
+  
+  📌 **출력해야 할 JSON 형식**
+  ```json
+  [
+      {
+          "property_id":6913778,
+          "deposit":220000000,
+          "facilities":
+              {
+                  "cooling": "TOP", 
+                  "living": "REFRIGERATOR,WASHER,SINK", 
+                  "security": "VIDEOPHONE,CCTV,DOOR", 
+                  "etc": "ELEVATOR,FIREALARM"
+              },
+          "description":"★강력추천★ 로얄층 위치 선호도 좋은 신축\r\n\r\n디딤돌대출 / 신생아특례대출 / 주택담보대출 /각종 대출 및 매매 투자 //설명,안내 도와드립니다//\r\n대출에 대해서 잘 모르시는 사회 초년생 손님분들위해서 대출 설명,비교해드리고 있습니다!\r\n대출 및 투자방향 정확한 권리분석 안내로 매수인들의 안전한 계약을 약속드립니다.\r\n\r\n❤️ 방 상세설명❤️\r\n✨제가 직접 촬영한 100% 실매물입니다✨\r\n✔ -풀옵션, 로얄층으로 뻥뷰 막힘없어 채광좋음\r\n-확장형으로 실제평수는 약8평\r\n-임차인 맞추기좋음, 수익형으로...",
+          "direction": "SOUTHEAST",
+          "latitude": 37.4737423,
+          "longitude": 126.8909873
+      },
+      {
+          "property_id":6973289,
+          "deposit":170000000,
           "facilities":
               {
                   "cooling": null, 
                   "living": null, 
                   "security": null, 
-                  "etc": "ELEVATOR"
+                  "etc": null
               },
-          "description":"매물번호 :  [P-12324]\r\n\r\n🟦 위치 : 교대역 도보 4분\r\n\r\n🟦 구조 : 업무홀 + 룸4 + 탕비실 + 테라스\r\n\r\n🟦 주차 : 무료\r\n\r\n🟦 A/C : 스탠드형1, 벽걸이형 3\r\n\r\n🟦 E/V  : O\r\n\r\n🟦 입주 : 즉시가능, 협의가능",
-          "direction": "WEST",
-          "latitude": 37.4939367,
-          "longitude": 127.0185953
-      },
-      {
-      "property_id":6883085,
-      "deposit":null,
-      "monthly_rent":null,
-      "facilities":
-          {
-              "cooling": "TOP", 
-              "living": null, 
-              "security": null, 
-              "etc": "ELEVATOR"
-          },
-      "description":"매물번호 :  [P-12326]\r\n\r\n🟦 위치 : 교대역 도보 1분\r\n\r\n🟦 주차 : 2대 무료\r\n\n\r\n🟦 A/C : 천장\r\n\r\n🟦 E/V  : O\r\n\r\n🟦 입주 : 즉시가능, 협의가능",
-      "direction": "SOUTH",
-      "latitude": 37.4938405,
-      "longitude": 127.0172511
-  }]
+          "description":"*전세 들어 있는 급매물 입니다.",
+          "direction": "SOUTHEAST",
+          "latitude": 37.4725293,
+          "longitude": 126.8878318
+      }
+  ]
 
 generate_response_prompt : |
   당신은 부동산 추천 전문가이자 세계적으로 지식이 있는 AI입니다. 제공된 매물 정보를 기반으로 사용자의 기준을 충족하는 최적의 매물을 추천하세요. 가장 추천하는 매물을 상단에 배치하고 이유를 자세히 설명하세요. 추가 매물에 대해서는 추천 이유를 간략하게 제공하세요.
@@ -453,7 +463,7 @@ generate_response_prompt : |
   ✨ **이 매물이 가장 적합한 이유를 상세히 설명해주세요.**
 
   - **🏠 매물번호:** [매물 ID]
-  - **💰 보증금/월세:** [보증금/월세]
+  - {money_info}
   - **🧭 방향:** [방향]
   - **🌟 특징:** [특징]
   - **✅ 추천 이유:**  
@@ -466,21 +476,21 @@ generate_response_prompt : |
 
   ### 📍 매물 1
   - **🏠 매물번호:** [매물 ID]
-  - **💰 보증금/월세:** [보증금/월세]
+  - {money_info}
   - **🧭 방향:** [방향]
   - **🌟 특징:** [특징]
   - **✅ 추천 이유:** *[간략한 추천 이유 설명]*
 
   ### 📍 매물 2
   - **🏠 매물번호:** [매물 ID]
-  - **💰 보증금/월세:** [보증금/월세]
+  - {money_info}
   - **🧭 방향:** [방향]
   - **🌟 특징:** [특징]
   - **✅ 추천 이유:** *[간략한 추천 이유 설명]*
 
   ### 📍 매물 3
   - **🏠 매물번호:** [매물 ID]
-  - **💰 보증금/월세:** [보증금/월세]
+  - {money_info}
   - **🧭 방향:** [방향]
   - **🌟 특징:** [특징]
   - **✅ 추천 이유:** *[간략한 추천 이유 설명]*
