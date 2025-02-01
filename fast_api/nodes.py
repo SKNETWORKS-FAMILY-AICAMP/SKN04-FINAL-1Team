@@ -51,7 +51,7 @@ def filter_node(state:RealEstateState) -> RealEstateState:
 
     print(f"[Filter Node] AI가 질문을 식별했습니다. {real_estate_type}")
 
-    previous_message = messages[-2] if len(messages) > 1 else ""  # ✅ 직전 메시지
+    previous_message = state["messages"][-2].content if len(state["messages"]) > 1 else ""  # ✅ 직전 메시지
 
     # ✅ 만약 최근 질문이 부동산과 관련 없으면 직전 질문과 연결 가능 여부 확인
     if real_estate_type == "Fail" and previous_message:
