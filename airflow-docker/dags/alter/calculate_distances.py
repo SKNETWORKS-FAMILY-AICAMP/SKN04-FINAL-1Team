@@ -259,178 +259,62 @@ class DistanceCalculator:
             logger.error(f"거리 계산 오류: {str(e)}, 좌표: ({lat1}, {lon1}) -> ({lat2}, {lon2})")
             return None
 
+    def get_nearby_grids(self, grid_x, grid_y):
+        """주변 그리드 좌표 반환"""
+        return list(product(
+            range(grid_x - 1, grid_x + 2),
+            range(grid_y - 1, grid_y + 2)
+        ))
+
 @provide_session
 def calculate_distances(session=None, batch_size=1000):
     calculator = DistanceCalculator()
     
     try:
-        logger.info("거리 계산 시작...")
-        
-        # 주소 데이터 로드 및 검증
-        addresses = session.execute(text("""
-            SELECT id, latitude, longitude 
-            FROM realestate.addresses 
-            WHERE latitude IS NOT NULL 
-            AND longitude IS NOT NULL 
-            AND latitude BETWEEN -90 AND 90 
-            AND longitude BETWEEN -180 AND 180
-        """)).fetchall()
-        
-        logger.info(f"로드된 주소 데이터: {len(addresses)}개")
-        
-        # 주소 그리드 생성
-        address_grid = calculator.create_grid_index(addresses)
-        logger.info(f"생성된 그리드 수: {len(address_grid)}")
-        
-        # 스키마 생성 확인
-        session.execute(text("CREATE SCHEMA IF NOT EXISTS realestate;"))
-        session.execute(text("""
-            DROP TABLE IF EXISTS realestate.location_distances CASCADE;
-            CREATE TABLE realestate.location_distances (
-                id SERIAL PRIMARY KEY,
-                property_id BIGINT NOT NULL,
-                address_id INTEGER NOT NULL,
-                distance DOUBLE PRECISION NOT NULL,
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                CONSTRAINT uq_property_address UNIQUE (property_id, address_id),
-                CONSTRAINT fk_property FOREIGN KEY (property_id) REFERENCES realestate.property_locations(property_id),
-                CONSTRAINT fk_address FOREIGN KEY (address_id) REFERENCES realestate.addresses(id)
-            );
-            
-            CREATE INDEX IF NOT EXISTS idx_location_distances_property ON realestate.location_distances(property_id);
-            CREATE INDEX IF NOT EXISTS idx_location_distances_address ON realestate.location_distances(address_id);
-        """))
-        session.commit()
-        
-        # 데이터베이스 상태 확인
-        property_count = session.execute(text("SELECT COUNT(*) FROM realestate.property_locations")).scalar()
-        address_count = session.execute(text("SELECT COUNT(*) FROM realestate.addresses")).scalar()
-        logger.info(f"데이터베이스 상태: property_locations={property_count}개, addresses={address_count}개")
-        
-        # 유효한 좌표를 가진 데이터 수 확인
-        valid_properties = session.execute(text("""
-            SELECT COUNT(*) 
-            FROM realestate.property_locations 
-            WHERE latitude IS NOT NULL 
-            AND longitude IS NOT NULL 
-            AND CAST(latitude AS TEXT) != 'NaN'
-            AND CAST(longitude AS TEXT) != 'NaN'
-            AND CAST(latitude AS DOUBLE PRECISION) BETWEEN -90 AND 90
-            AND CAST(longitude AS DOUBLE PRECISION) BETWEEN -180 AND 180
-        """)).scalar()
-        
-        valid_addresses = session.execute(text("""
-            SELECT COUNT(*) 
-            FROM realestate.addresses 
-            WHERE latitude IS NOT NULL 
-            AND longitude IS NOT NULL 
-            AND CAST(latitude AS TEXT) != 'NaN'
-            AND CAST(longitude AS TEXT) != 'NaN'
-            AND latitude BETWEEN -90 AND 90
-            AND longitude BETWEEN -180 AND 180
-        """)).scalar()
-        
-        logger.info(f"유효한 좌표를 가진 데이터: property_locations={valid_properties}개, addresses={valid_addresses}개")
-        
-        # 기존 거리 데이터 로드
-        logger.info("기존 거리 데이터 로드 중...")
-        existing_pairs = session.execute(text("""
-            SELECT property_id, address_id 
-            FROM realestate.location_distances
-        """)).fetchall()
-        calculator.processed_pairs.update((p[0], p[1]) for p in existing_pairs)
-        logger.info(f"기존 거리 데이터 {len(calculator.processed_pairs)}쌍 로드 완료")
-        
-        # SQL 쿼리 최적화 - 인덱스 힌트 추가
-        logger.info("새로운 매물-주소 조합 조회 중...")
+        # 새로운 매물과 주소 데이터 로드
         new_pairs = session.execute(text("""
-            WITH property_batch AS (
-                SELECT DISTINCT 
-                    p.property_id, 
-                    CAST(p.latitude AS DOUBLE PRECISION) as latitude,
-                    CAST(p.longitude AS DOUBLE PRECISION) as longitude
-                FROM realestate.property_locations p
-                WHERE p.latitude IS NOT NULL 
-                AND p.longitude IS NOT NULL 
-                AND CAST(p.latitude AS TEXT) != 'NaN'
-                AND CAST(p.longitude AS TEXT) != 'NaN'
-                AND CAST(p.latitude AS DOUBLE PRECISION) BETWEEN -90 AND 90
-                AND CAST(p.longitude AS DOUBLE PRECISION) BETWEEN -180 AND 180
-                LIMIT :batch_size
-            ),
-            valid_addresses AS (
-                SELECT 
-                    a.id, 
-                    a.latitude,
-                    a.longitude
-                FROM realestate.addresses a
-                WHERE a.latitude IS NOT NULL 
-                AND a.longitude IS NOT NULL 
-                AND CAST(a.latitude AS TEXT) != 'NaN'
-                AND CAST(a.longitude AS TEXT) != 'NaN'
-                AND a.latitude BETWEEN -90 AND 90
-                AND a.longitude BETWEEN -180 AND 180
+            WITH new_combinations AS (
+                SELECT DISTINCT p.property_id, p.latitude, p.longitude, 
+                       a.address_id, a.latitude, a.longitude
+                FROM property_locations p
+                CROSS JOIN addresses a
+                LEFT JOIN location_distances d 
+                    ON d.property_id = p.property_id 
+                    AND d.address_id = a.address_id
+                WHERE d.distance IS NULL
+                    AND p.latitude IS NOT NULL 
+                    AND p.longitude IS NOT NULL
+                    AND a.latitude IS NOT NULL 
+                    AND a.longitude IS NOT NULL
             )
-            SELECT DISTINCT 
-                p.property_id, p.latitude, p.longitude,
-                a.id as address_id, a.latitude, a.longitude
-            FROM property_batch p
-            CROSS JOIN valid_addresses a
-            WHERE NOT EXISTS (
-                SELECT 1 
-                FROM realestate.location_distances d
-                WHERE d.property_id = p.property_id 
-                AND d.address_id = a.id
-            )
-            AND ABS(p.latitude - a.latitude) * 111000 <= :max_distance
-            AND ABS(p.longitude - a.longitude) * 111000 * 
-                COS(RADIANS((p.latitude + a.latitude) / 2)) <= :max_distance
-        """), {
-            'batch_size': batch_size,
-            'max_distance': calculator.max_distance
-        }).fetchall()
+            SELECT * FROM new_combinations
+        """)).fetchall()
         
-        logger.info(f"새로운 거리 계산 필요: {len(new_pairs)}쌍")
+        print(f"새로운 거리 계산 필요: {len(new_pairs)}쌍")
         
-        # 추가 데이터 검증
-        valid_pairs = []
-        for pair in new_pairs:
-            try:
-                prop_lat = float(pair[1])
-                prop_lon = float(pair[2])
-                addr_lat = float(pair[4])
-                addr_lon = float(pair[5])
-                
-                if (not math.isnan(prop_lat) and not math.isnan(prop_lon) and
-                    not math.isnan(addr_lat) and not math.isnan(addr_lon) and
-                    -90 <= prop_lat <= 90 and -180 <= prop_lon <= 180 and
-                    -90 <= addr_lat <= 90 and -180 <= addr_lon <= 180):
-                    valid_pair = (
-                        pair[0],
-                        prop_lat,
-                        prop_lon,
-                        pair[3],
-                        addr_lat,
-                        addr_lon
-                    )
-                    valid_pairs.append(valid_pair)
-            except (ValueError, TypeError) as e:
-                logger.debug(f"좌표 변환 실패: {pair} - {str(e)}")
-                continue
-        
-        logger.info(f"유효한 좌표를 가진 쌍: {len(valid_pairs)}/{len(new_pairs)}")
-        
-        if not valid_pairs:
-            logger.info("계산할 유효한 거리 데이터가 없습니다.")
+        if not new_pairs:
+            print("계산할 새로운 거리 데이터가 없습니다.")
             return True
         
-        # 매물 데이터 준비
-        property_data = [(p[0], p[1], p[2]) for p in valid_pairs]
-        property_data = list(set(property_data))
-        logger.info(f"총 {len(property_data)}개의 고유 매물 데이터 준비 완료")
+        # 주소 데이터를 그리드로 인덱싱
+        address_data = [(p[3], p[4], p[5]) for p in new_pairs]  # address_id, lat, lon
+        address_grid = calculator.create_grid_index(list(set(address_data)))
         
-        # 청크 크기 조정
-        chunk_size = 50  # 더 작은 청크 크기 사용
+        # 매물 데이터 준비
+        property_data = [(p[0], p[1], p[2]) for p in new_pairs]  # property_id, lat, lon
+        property_data = list(set(property_data))  # 중복 제거
+        
+        # CPU 코어 수에 따라 데이터 분할
+        num_cores = multiprocessing.cpu_count()
+        chunk_size = max(1, len(property_data) // num_cores)
+        chunks = [
+            property_data[i:i + chunk_size]
+            for i in range(0, len(property_data), chunk_size)
+        ]
+        
+        print(f"총 {len(chunks)}개 청크로 분할하여 처리 시작...")
+        
+        # 멀티프로세싱으로 거리 계산
         results = []
         total_chunks = len(property_data) // chunk_size + (1 if len(property_data) % chunk_size else 0)
         
@@ -442,23 +326,35 @@ def calculate_distances(session=None, batch_size=1000):
                 chunk_results = calculator.calculate_distances_for_chunk(chunk, address_grid)
                 results.extend(chunk_results)
                 
-                # 더 작은 크기로 자주 저장
-                if len(results) >= 500:
-                    logger.info(f"중간 저장 시작: {len(results)}개의 결과")
-                    calculator.save_results(session, results)
+                # 중간 결과 저장
+                if len(results) >= batch_size:
+                    batch = [
+                        LocationDistance(
+                            property_id=prop_id,
+                            address_id=addr_id,
+                            distance=distance
+                        )
+                        for prop_id, addr_id, distance in results
+                    ]
+                    session.bulk_save_objects(batch)
+                    session.commit()
                     results = []
-                
-            except Exception as e:
-                logger.error(f"청크 {i//chunk_size + 1} 처리 중 오류 발생: {str(e)}")
-                continue
-        
-        # 남은 결과 저장
-        if results:
-            logger.info(f"최종 저장 시작: {len(results)}개의 결과")
-            calculator.save_results(session, results)
-        
-        logger.info("모든 거리 계산 및 저장 완료")
-        return True
+            
+            # 남은 결과 저장
+            if results:
+                batch = [
+                    LocationDistance(
+                        property_id=prop_id,
+                        address_id=addr_id,
+                        distance=distance
+                    )
+                    for prop_id, addr_id, distance in results
+                ]
+                session.bulk_save_objects(batch)
+                session.commit()
+            
+            print("거리 계산 완료!")
+            return True
         
     except Exception as e:
         logger.error(f"거리 계산 중 오류 발생: {str(e)}")
