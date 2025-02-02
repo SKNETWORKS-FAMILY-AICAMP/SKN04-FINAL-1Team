@@ -5,6 +5,84 @@ from .models import (
     Rental, Sale, User, Chat, Feedback, Notice, UserLog, Favorite,
     CrimeStats, Subway, LocationDistance
 )
+from .ai.llm_app import stream_response
+import os
+from dotenv import load_dotenv
+
+# ✅ .env 파일 로드
+load_dotenv()
+
+# ✅ OpenAI API 설정
+OPENAI_CONFIG = {
+    "openai_api_key": os.getenv("OPENAI_API_KEY"),
+    "model_name": "gpt-4-turbo-preview",
+    "temperature": 0.7,
+    "max_tokens": 2000,
+    "top_p": 1.0,
+    "frequency_penalty": 0.0,
+    "presence_penalty": 0.0
+}
+
+# ✅ 데이터베이스 스키마 정보
+DB_SCHEMA = """
+CREATE TABLE addresses (
+    address_id SERIAL PRIMARY KEY,
+    area_name VARCHAR(255),
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION
+);
+
+CREATE TABLE location_distances (
+    id SERIAL PRIMARY KEY,
+    property_id INTEGER,
+    address_id INTEGER,
+    distance DOUBLE PRECISION
+);
+
+CREATE TABLE rentals (
+    id SERIAL PRIMARY KEY,
+    property_id INTEGER,
+    rental_type VARCHAR(10),
+    deposit BIGINT,
+    monthly_rent BIGINT
+);
+
+CREATE TABLE sales (
+    id SERIAL PRIMARY KEY,
+    property_id INTEGER,
+    price BIGINT
+);
+
+CREATE TABLE property_info (
+    id SERIAL PRIMARY KEY,
+    property_id INTEGER,
+    property_type VARCHAR(50),
+    room_count INTEGER,
+    bathroom_count INTEGER,
+    parking_count INTEGER,
+    total_area DOUBLE PRECISION,
+    exclusive_area DOUBLE PRECISION,
+    land_area DOUBLE PRECISION,
+    direction VARCHAR(50),
+    floor INTEGER,
+    total_floor INTEGER,
+    construction_date DATE,
+    facilities JSONB,
+    description TEXT
+);
+
+CREATE TABLE property_locations (
+    id SERIAL PRIMARY KEY,
+    property_id INTEGER,
+    sido VARCHAR(50),
+    sigungu VARCHAR(50),
+    dong VARCHAR(50),
+    jibun VARCHAR(50),
+    road_name VARCHAR(50),
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION
+);
+"""
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -60,32 +138,19 @@ class ChatSerializer(serializers.ModelSerializer):
         
         # 메시지 타입이 'user'인 경우에만 AI 응답 생성
         if chat.message_type == 'user':
-            # 부동산 관련 기본 응답 템플릿
-            ai_responses = {
-                '가격': '해당 매물의 가격은 시세와 비교했을 때 적절한 수준입니다. 주변 시세 정보를 함께 확인해보시겠습니까?',
-                '위치': '해당 지역은 교통이 편리하며, 주변에 편의시설이 잘 갖추어져 있습니다. 더 자세한 정보를 원하시나요?',
-                '학군': '이 지역은 우수한 학군이 형성되어 있으며, 도보 거리에 여러 학교가 있습니다.',
-                '교통': '지하철역과 버스정류장이 가깝고, 주요 도로와의 접근성이 좋습니다.',
-                '환경': '주변에 공원과 녹지가 있어 주거 환경이 쾌적합니다.',
-                '시설': '단지 내 주차장, 헬스장, 놀이터 등 편의시설이 잘 갖추어져 있습니다.',
-                '안전': '24시간 경비 시스템과 CCTV가 설치되어 있어 안전한 주거환경을 제공합니다.'
-            }
+            try:
+                # AI 응답 생성
+                response = ""
+                for chunk in stream_response({"message": chat.message, "table": DB_SCHEMA}, config=OPENAI_CONFIG):
+                    if chunk[1]['langgraph_node'] in ["Re_Questions", "No_Result_Answer", "Generate_Response"]:
+                        response += chunk[0].content
 
-            # 사용자 메시지에서 키워드 매칭
-            message = chat.message.lower()
-            matched_response = None
-
-            for keyword, response in ai_responses.items():
-                if keyword in message:
-                    matched_response = response
-                    break
-
-            # 기본 응답
-            if not matched_response:
-                matched_response = "죄송합니다. 좀 더 구체적인 질문을 해주시면 자세히 답변 드리겠습니다. 매물의 가격, 위치, 학군, 교통, 환경, 시설, 안전 등에 대해 문의해 주세요."
-
-            chat.ai_response = matched_response
-            chat.save()
+                chat.ai_response = response
+                chat.save()
+                
+            except Exception as e:
+                chat.ai_response = f"AI 응답 생성 중 오류가 발생했습니다: {str(e)}"
+                chat.save()
 
         return chat
 

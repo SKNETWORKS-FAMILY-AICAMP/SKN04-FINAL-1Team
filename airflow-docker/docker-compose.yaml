@@ -150,9 +150,7 @@ services:
     build:
       context: ./real_estate_api
       dockerfile: Dockerfile
-    command: ./start.sh
     volumes:
-      - ./real_estate_api:/app
       - django-static-volume:/app/staticfiles
     ports:
       - '8000:8000'
