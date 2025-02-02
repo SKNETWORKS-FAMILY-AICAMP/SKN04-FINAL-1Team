@@ -13,12 +13,11 @@ aiohttp==3.9.1
 async-timeout==4.0.3
 beautifulsoup4==4.12.2
 python-dotenv==1.0.0
-tqdm==4.66.1
 pendulum==2.1.2
 
 # 지리정보 처리
 geoalchemy2==0.14.1
-shapely==2.0.2
+shapely==1.8.5
 
 # JSON 처리
 simplejson==3.19.2

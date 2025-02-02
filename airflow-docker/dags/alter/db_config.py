@@ -15,11 +15,6 @@ DATA_DB_HOST = Variable.get("DATA_DB_HOST")
 DATA_DB_PORT = Variable.get("DATA_DB_PORT")
 DATA_DB_NAME = Variable.get("DATA_DB_NAME")
 
-
-
-
-
-
 # 데이터 DB 연결 URL
 DATA_DB_URL = f'postgresql://{DATA_DB_USER}:{DATA_DB_PASSWORD}@{DATA_DB_HOST}:{DATA_DB_PORT}/{DATA_DB_NAME}'
 

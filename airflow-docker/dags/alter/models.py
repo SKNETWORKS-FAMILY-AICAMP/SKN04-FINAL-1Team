@@ -1,6 +1,6 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import (Column, Integer, String, Float, DateTime, ForeignKey, 
-                       Text, DECIMAL, Boolean, JSON)
+                       Text, DECIMAL, Boolean, JSON, BigInteger, Numeric, Index, UniqueConstraint, Date, TIMESTAMP, text)
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from sqlalchemy.types import TypeDecorator, String
@@ -158,11 +158,10 @@ class Rental(Base):
     __tablename__ = 'rentals'
     __table_args__ = {'schema': 'realestate'}
     
-    id = Column(Integer, primary_key=True)
-    property_id = Column(Integer, ForeignKey('realestate.property_info.property_id'), unique=True, nullable=False)
-    rental_type = Column(String(50), nullable=False)
-    deposit = Column(DECIMAL(10,2), nullable=False)
-    monthly_rent = Column(DECIMAL(10,2), nullable=False)
+    property_id = Column(BigInteger, ForeignKey('realestate.property_info.property_id'), primary_key=True)
+    rental_type = Column(String)
+    deposit = Column(BigInteger, default=0)
+    monthly_rent = Column(BigInteger, default=0)
     
     property = relationship("PropertyInfo", back_populates="rentals", uselist=False)
 
@@ -187,9 +186,10 @@ class LocationDistance(Base):
     )
     
     id = Column(Integer, primary_key=True)
-    property_id = Column(Integer, ForeignKey('realestate.property_info.property_id'), unique=True, nullable=False)
-    price = Column(DECIMAL(10,2), nullable=False)
-    end_date = Column(DateTime)
-    transaction_date = Column(DateTime)
+    property_id = Column(Integer, ForeignKey('realestate.property_locations.property_id'), nullable=False)
+    address_id = Column(Integer, ForeignKey('realestate.addresses.id'), nullable=False)
+    distance = Column(Float, nullable=False)  # 미터 단위
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('CURRENT_TIMESTAMP'))
     
-    property = relationship("PropertyInfo", back_populates="sales")
+    property_location = relationship("PropertyLocation", back_populates="distances")
+    address = relationship("Address", back_populates="distances")
