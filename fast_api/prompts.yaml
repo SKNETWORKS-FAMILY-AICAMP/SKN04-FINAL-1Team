@@ -209,15 +209,16 @@ base_prompt : |
   15. property_type은 영어로 쳐야지 나옵니다.
       - pi.property_type LIKE '%APARTMENT%' -> 아파트
       - pi.property_type LIKE '%COMMERCIAL%' -> 상가
+  16. 따로 언급이 없는 경우 찾아야 하는 매물의 개수는 5개입니다. 이는 limit 5로 제한하면 됩니다.
 
 
 rentals_prompt : |
-  16. rental_type 값은 다음과 같습니다:
+  17. rental_type 값은 다음과 같습니다:
       - 30051B1 : 전세
       - 30051B2 : 월세
       - 30051B3 : 단기임대
 
-  17. rentals 테이블에 price라는 컬럼이 없습니다. rentals 테이블에는 price 대신 deposit(보증금)과 monthly_rent(월세) 컬럼이 존재합니다.
+  18. rentals 테이블에 price라는 컬럼이 없습니다. rentals 테이블에는 price 대신 deposit(보증금)과 monthly_rent(월세) 컬럼이 존재합니다.
 
   ### 월세 예시 질문과 쿼리:
 
@@ -232,7 +233,7 @@ rentals_prompt : |
   AND r.rental_type = '30051B2'
   AND r.deposit <= 20000000
   AND r.monthly_rent <= 700000
-  limit 10;
+  limit 5;
   '''
 
   ### 전세 예시 질문과 쿼리:
@@ -250,7 +251,7 @@ rentals_prompt : |
   AND r.deposit <= 1000000000
   AND a.area_name LIKE '%강남%'
   AND ld.distance <= 500
-  limit 10;
+  limit 5;
   '''
 
   사용자 질문: {user_query}
@@ -268,7 +269,7 @@ sales_prompt : |
   WHERE pl.sigungu LIKE '%강서구%'
   AND s.price <= 1000000000
   ORDER BY s.price desc
-  limit 10;
+  limit 5;
   '''
 
   - 질문: "강동역 역세권 아파트 15억 추천해줘"
@@ -285,7 +286,7 @@ sales_prompt : |
   AND a.area_name LIKE '%강동%'
   AND ld.distance <= 500
   ORDER BY s.price desc
-  limit 10;
+  limit 5;
   '''
 
   사용자 질문: {user_query}
