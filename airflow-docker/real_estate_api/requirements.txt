@@ -8,3 +8,6 @@ django-filter==23.5
 drf-yasg==1.21.7
 PyYAML==5.1
 markdown==3.5.2
+coreapi==2.3.3
+uritemplate==4.1.1
+whitenoise==6.6.0

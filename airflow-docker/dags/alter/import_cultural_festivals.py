@@ -3,6 +3,7 @@ from alter.models import Address, CulturalFestival
 from alter.db_config import provide_session
 from alter.utils import main_logger as logger
 import os
+from datetime import datetime
 
 @provide_session
 def import_cultural_festivals(session=None):
@@ -29,10 +30,13 @@ def import_cultural_festivals(session=None):
                 address = session.query(Address).filter_by(area_name=area_name).first()
                 
                 if not address:
+                    now = datetime.now()
                     address = Address(
                         area_name=area_name,
                         latitude=row['FCLTY_LA'],
-                        longitude=row['FCLTY_LO']
+                        longitude=row['FCLTY_LO'],
+                        created_at=now,
+                        updated_at=now
                     )
                     session.add(address)
                     session.flush()
@@ -42,7 +46,8 @@ def import_cultural_festivals(session=None):
                     address_id=address.id,
                     festival_name=row['FCLTY_NM'],
                     start_date=row['FSTVL_BEGIN_DE'],
-                    end_date=row['FSTVL_END_DE']
+                    end_date=row['FSTVL_END_DE'],
+                    created_at=datetime.now()
                 )
                 session.add(festival)
                 

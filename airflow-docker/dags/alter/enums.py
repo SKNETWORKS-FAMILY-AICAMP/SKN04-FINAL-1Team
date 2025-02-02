@@ -50,7 +50,7 @@ class MoveInType(enum.Enum):
     INMONTH = "30063INMONTH" #개월 이내
     AFTERMONTH = "30063AFTERMONTH" #개월 이후
     AFTER = "30063AFTER" #이후
-    NULL = ""
+    UNKNOWN = "UNKNOWN" #추가
 
 class PropertyType(enum.Enum):
     """매물 타입"""
@@ -65,6 +65,7 @@ class PropertyType(enum.Enum):
     FACTORY = "30000C09" #공장
     REDEVELOPED = "30000C10" #재개발
     BUILDING = "30000C11" #건물
+    UNKNOWN = "UNKNOWN" #추가
 
 # 추가
 class MoveInFeeType(enum.Enum):
@@ -124,14 +125,14 @@ class BuildingUseType(enum.Enum):
     CAMPGROUND_FACILITY = "30073USG29" #야영장 시설
     UNREGISTERED_BUILDING = "30073USG30" #미등기건물
     OTHER_SETTLEMENT = "30073USG31" #그 밖에 토지의 정착물
-    NULL = ""
+    UNKNOWN = "UNKNOWN" #추가
 
 class HeatingType(enum.Enum):
     """난방방식 유형 코드"""
     SEPARATE = "30081SEPARATE" # 개별난방
     CENTER = "30081CENTER" # 중앙난방
     LOCAL = "30081LOCAL" # 지역난방
-    NULL = ""
+    UNKNOWN = "UNKNOWN"
 
 class HeatingFuel1(enum.Enum):
     """난방연료 유형 코드"""
@@ -174,6 +175,7 @@ class DirectionType(enum.Enum):
     SOUTHEAST = "30002SOUTHEAST" #남동
     NORTHWEST = "30002NORTHWEST" #북서
     SOUTHWEST = "30002SOUTHWEST" #남서
+    UNKNOWN = "UNKNOWN" #추가
 
 class EntranceType(enum.Enum):
     """현관유형"""
@@ -336,7 +338,7 @@ class LoanAvailability(enum.Enum):
     NO_LOAN = "30053C010"     # 융자금 없음
     LOAN_UNDER_30 = "30053C011"    # 융자금 시세대비 30%미만
     LOAN_OVER_30 = "30053C012" # 시세대비 30%이상
-    NULL = ""
+    UNKNOWN = "UNKNOWN" #추가
 
 class TransactionType(enum.Enum):
     """거래구분"""
@@ -344,3 +346,5 @@ class TransactionType(enum.Enum):
     YEARLY = "30051B1" # 전세
     MONTHLY = "30051B2" # 월세
     SHORT_TERM_RENT = "30051B3" # 단기임대
+    UNKNOWN = "UNKNOWN" #추가
+

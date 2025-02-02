@@ -17,7 +17,18 @@ python manage.py makemigrations
 python manage.py migrate api
 python manage.py migrate
 
+# static 파일 수집
+echo "Static 파일 수집 중..."
+mkdir -p staticfiles
+python manage.py collectstatic --noinput --clear
 
 # 서버 시작
-echo "Django 서버 시작"
-python manage.py runserver 0.0.0.0:8000 
+echo "Gunicorn 서버 시작"
+gunicorn real_estate_api.wsgi:application \
+    --bind 0.0.0.0:8000 \
+    --workers 4 \
+    --worker-class gunicorn.workers.sync.SyncWorker \
+    --timeout 120 \
+    --access-logfile - \
+    --error-logfile - \
+    --reload 

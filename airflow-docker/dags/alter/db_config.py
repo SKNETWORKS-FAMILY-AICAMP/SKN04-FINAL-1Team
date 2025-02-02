@@ -1,21 +1,33 @@
 import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 from functools import wraps
+from airflow.models import Variable
+
+load_dotenv()
 
 # 데이터 DB 연결 정보 - docker-compose.yaml의 postgres-data 서비스 설정과 일치
-DATA_DB_HOST = os.getenv('DATA_DB_HOST', 'postgres-data')
-DATA_DB_PORT = os.getenv('DATA_DB_PORT', '5432')
-DATA_DB_USER = os.getenv('DATA_DB_USER', 'realestate')
-DATA_DB_PASSWORD = os.getenv('DATA_DB_PASSWORD', 'realestate123')
-DATA_DB_NAME = os.getenv('DATA_DB_NAME', 'realestate')  # realestate.db가 아닌 realestate
+DATA_DB_USER = Variable.get("DATA_DB_USER")
+DATA_DB_PASSWORD = Variable.get("DATA_DB_PASSWORD")
+DATA_DB_HOST = Variable.get("DATA_DB_HOST")
+DATA_DB_PORT = Variable.get("DATA_DB_PORT")
+DATA_DB_NAME = Variable.get("DATA_DB_NAME")
+
+
+
+
+
 
 # 데이터 DB 연결 URL
 DATA_DB_URL = f'postgresql://{DATA_DB_USER}:{DATA_DB_PASSWORD}@{DATA_DB_HOST}:{DATA_DB_PORT}/{DATA_DB_NAME}'
 
 # 엔진 생성
-engine = create_engine(DATA_DB_URL)
+engine = create_engine(
+    DATA_DB_URL,
+    connect_args={'options': '-c search_path=realestate,public'}
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_session():

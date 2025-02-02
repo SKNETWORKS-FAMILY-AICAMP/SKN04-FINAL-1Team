@@ -68,17 +68,17 @@ CREATE TABLE IF NOT EXISTS realestate.rentals (
     id SERIAL PRIMARY KEY,
     property_id INTEGER REFERENCES realestate.property_info(property_id) UNIQUE NOT NULL,
     rental_type VARCHAR(50) NOT NULL,
-    deposit DECIMAL(10,2) NOT NULL,
-    monthly_rent DECIMAL(10,2) NOT NULL
+    deposit BIGINT DEFAULT 0,
+    monthly_rent BIGINT DEFAULT 0
 );
 
 -- sales 테이블 생성
 CREATE TABLE IF NOT EXISTS realestate.sales (
     id SERIAL PRIMARY KEY,
     property_id INTEGER REFERENCES realestate.property_info(property_id) UNIQUE NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
-    end_date TIMESTAMP WITH TIME ZONE,
-    transaction_date TIMESTAMP WITH TIME ZONE
+    price BIGINT DEFAULT 0,
+    end_date VARCHAR(10),
+    transaction_date VARCHAR(10)
 );
 
 -- 문화시설 테이블 생성
@@ -107,19 +107,31 @@ CREATE TABLE IF NOT EXISTS realestate.subway_stations (
     line_info VARCHAR(50),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
-
 -- 범죄 통계 테이블 생성
 CREATE TABLE IF NOT EXISTS realestate.crime_stats (
-    id SERIAL PRIMARY KEY,
-    address_id INTEGER REFERENCES realestate.addresses(id),
-    reference_date VARCHAR(8),
-    total_population FLOAT,
-    crime_category VARCHAR(50) NOT NULL,
-    crime_subcategory VARCHAR(50) NOT NULL,
-    incident_count INTEGER NOT NULL,
-    crime_rate FLOAT,
+    id BIGSERIAL PRIMARY KEY,
+    address_id BIGINT REFERENCES realestate.addresses(id) NOT NULL,
+    reference_date DATE NOT NULL,
+    total_crime_count INTEGER NOT NULL,
+    violent_crime_count INTEGER NOT NULL,
+    theft_crime_count INTEGER NOT NULL,
+    intellectual_crime_count INTEGER NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- location_distances 테이블 생성
+CREATE TABLE IF NOT EXISTS realestate.location_distances (
+    id SERIAL PRIMARY KEY,
+    property_id INTEGER REFERENCES realestate.property_locations(property_id) NOT NULL,
+    address_id INTEGER REFERENCES realestate.addresses(id) NOT NULL,
+    distance FLOAT NOT NULL,  -- 미터 단위
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_property_address UNIQUE (property_id, address_id)
+);
+
+-- 인덱스 생성
+CREATE INDEX IF NOT EXISTS idx_location_distances_property ON realestate.location_distances(property_id);
+CREATE INDEX IF NOT EXISTS idx_location_distances_address ON realestate.location_distances(address_id);
 
 -- 권한 설정
 GRANT ALL PRIVILEGES ON DATABASE realestate TO realestate;

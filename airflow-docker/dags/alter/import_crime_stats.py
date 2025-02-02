@@ -9,7 +9,7 @@ from alter.utils import main_logger as logger
 from airflow.models import Variable
 
 # 서울시 OpenAPI 설정
-SEOUL_API_KEY = Variable.get("SEOUL_API_KEY", "7169716b6c786f643731576f535869")
+SEOUL_API_KEY = Variable.get("SEOUL_API_KEY")
 API_URL = f"http://openapi.seoul.go.kr:8088/{SEOUL_API_KEY}/xml/SPOP_LOCAL_RESD_JACHI/1/25/"
 
 # 구청 코드와 구 이름 매핑
@@ -68,19 +68,43 @@ def get_district_population(district_code):
 def process_crime_stats(session, address_id, crime_data):
     """범죄 통계 데이터 처리"""
     try:
-        stats = CrimeStats(
+        # 범죄 유형별로 카운트를 적절한 컬럼에 매핑
+        crime_category = crime_data['crime_category']
+        incident_count = crime_data['incident_count']
+        
+        # 기존 통계 레코드 찾기 또는 새로 생성
+        stats = session.query(CrimeStats).filter_by(
             address_id=address_id,
-            reference_date=crime_data.get('reference_date'),
-            total_population=crime_data.get('total_population'),
-            crime_category=crime_data['crime_category'],
-            crime_subcategory=crime_data['crime_subcategory'],
-            incident_count=crime_data['incident_count'],
-            crime_rate=calculate_crime_rate(
-                crime_data['incident_count'], 
-                crime_data.get('total_population')
+            reference_date=crime_data.get('reference_date')
+        ).first()
+        
+        if not stats:
+            stats = CrimeStats(
+                address_id=address_id,
+                reference_date=crime_data.get('reference_date'),
+                total_crime_count=0,
+                violent_crime_count=0,
+                theft_crime_count=0,
+                intellectual_crime_count=0,
+                created_at=datetime.now()  # created_at 필드 명시적 설정
             )
+            session.add(stats)
+        
+        # 범죄 대분류에 따라 적절한 카운트 업데이트
+        if crime_category == '폭력범죄':
+            stats.violent_crime_count += incident_count
+        elif crime_category == '절도범죄':
+            stats.theft_crime_count += incident_count
+        elif crime_category == '지능범죄':
+            stats.intellectual_crime_count += incident_count
+            
+        # 전체 범죄 건수 업데이트
+        stats.total_crime_count = (
+            stats.violent_crime_count +
+            stats.theft_crime_count +
+            stats.intellectual_crime_count
         )
-        session.add(stats)
+        
         session.flush()
         return stats
     except Exception as e:
@@ -102,10 +126,13 @@ def get_or_create_address(session, area_name):
     """주소 가져오기 또는 생성"""
     address = session.query(Address).filter_by(area_name=area_name).first()
     if not address:
+        now = datetime.now()
         address = Address(
             area_name=area_name,
             latitude=None,  # 나중에 update_address_coordinates.py에서 업데이트됨
-            longitude=None
+            longitude=None,
+            created_at=now,
+            updated_at=now
         )
         session.add(address)
         session.flush()

@@ -4,6 +4,7 @@ from alter.db_config import provide_session
 from alter.utils import main_logger as logger
 import os
 import logging
+from datetime import datetime
 
 @provide_session
 def import_cultural_facilities(session=None):
@@ -32,26 +33,31 @@ def import_cultural_facilities(session=None):
                 # 서울 데이터만 필터링
                 df = df[df['CTPRVN_NM'].str.contains('서울', na=False)]
                 
-                for _, row in df.iterrows():
+                for idx, row in df.iterrows():
                     try:
                         # 주소 처리
                         area_name = row['FCLTY_ROAD_NM_ADDR']
                         address = session.query(Address).filter_by(area_name=area_name).first()
                         
                         if not address:
+                            now = datetime.now()
                             address = Address(
                                 area_name=area_name,
                                 latitude=row['FCLTY_LA'],
-                                longitude=row['FCLTY_LO']
+                                longitude=row['FCLTY_LO'],
+                                created_at=now,
+                                updated_at=now
                             )
                             session.add(address)
                             session.flush()
                         
                         # 문화시설 정보 저장
+                        now = datetime.now()
                         facility = CulturalFacility(
                             address_id=address.id,
                             facility_name=row['FCLTY_NM'],
-                            facility_type=row['MLSFC_NM']
+                            facility_type=row['MLSFC_NM'],
+                            created_at=now
                         )
                         session.add(facility)
                         success_count += 1
@@ -86,7 +92,7 @@ def import_cultural_facilities(session=None):
                 # 서울 데이터만 필터링
                 df = df[df['CTPRVN_NM'].str.contains('서울', na=False)]
                 
-                for _, row in df.iterrows():
+                for idx, row in df.iterrows():
                     try:
                         # 도로명주소와 건물번호 합치기
                         if pd.isna(row.get('RDNMADR_NM')):
@@ -111,19 +117,24 @@ def import_cultural_facilities(session=None):
                         address = session.query(Address).filter_by(area_name=full_address).first()
                         
                         if not address:
+                            now = datetime.now()
                             address = Address(
                                 area_name=full_address,
                                 latitude=row.get('LC_LA', row.get('FCLTY_LA')),
-                                longitude=row.get('LC_LO', row.get('FCLTY_LO'))
+                                longitude=row.get('LC_LO', row.get('FCLTY_LO')),
+                                created_at=now,
+                                updated_at=now
                             )
                             session.add(address)
                             session.flush()
                         
                         # 문화시설 정보 저장
+                        now = datetime.now()
                         facility = CulturalFacility(
                             address_id=address.id,
                             facility_name=facility_name,
-                            facility_type=row.get('CL_NM', '기타')
+                            facility_type=row.get('CL_NM', '기타'),
+                            created_at=now
                         )
                         session.add(facility)
                         success_count += 1
