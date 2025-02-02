@@ -1,0 +1,28 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "username": "test",
+      "password": "password123",
+      "email": "test@example.com"
+    },
+    {
+      "id": "fdd8",
+      "username": "testuser@example.com",
+      "password": "1234",
+      "email": "123",
+      "gender": "여성",
+      "age": "213",
+      "desiredLocation": "32"
+    },
+    {
+      "id": "d2ad",
+      "username": "1",
+      "password": "1234",
+      "email": "testuser@example.com",
+      "gender": "남성",
+      "age": "12332",
+      "desiredLocation": "123123"
+    }
+  ]
+}

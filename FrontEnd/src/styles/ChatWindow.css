@@ -1,0 +1,128 @@
+.chat-window-toggle-btn {
+    position: fixed;
+    top: 10px;
+    left: 100px;
+    z-index: 1401;
+    background: #ddd;
+    padding: 10px 15px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.chat-window {
+    position: fixed;
+    bottom: 30px;
+    left: 220px;
+    width: 300px;
+    height: 90%;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    z-index: 1300;
+    transition: transform 0.3s ease-in-out;
+    user-select: none;
+}
+
+.chat-window.open {
+    transform: translateX(0);
+    transition: transform 0.3s ease-in-out;
+}
+
+.chat-window.closed {
+    transform: translateX(-200px);
+    transition: transform 0.3s ease-in-out;
+}
+
+.chat-window-header {
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 10px 10px 0 0;
+    cursor: grab;
+}
+
+.chat-window-header:active {
+    cursor: grabbing;
+}
+
+.chat-window-header button {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 30px;
+}
+
+.chat-window-messages {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.chat-window-message {
+    margin-bottom: 10px;
+}
+
+.chat-window-message.user {
+    text-align: right;
+    color: #1565C0;
+    border: 1px solid rgb(200, 200, 200);
+    border-radius: 5px;
+    background-color: #e3f2fd;
+}
+
+.chat-window-message.assistant {
+    background-color: #fafaf0;
+    text-align: left;
+    color: #1b5e20;
+    border: 1px solid rgb(220, 220, 220);
+    padding-left: 2px;
+    border-radius: 5px;
+}
+
+.chat-window-message.loading {
+    text-align: center;
+    color: gray;
+}
+
+.chat-window-input {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #ccc;
+}
+
+.chat-window-input textarea {
+    flex: 1;
+    resize: none;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.chat-window-input button {
+    margin-left: 10px;
+    padding: 5px 10px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.chat-window-input button:disabled {
+    background-color: #aaa;
+    cursor: not-allowed;
+}
+
+.star-icon {
+    cursor: pointer;
+    height: 5px;
+    top: 0;
+}

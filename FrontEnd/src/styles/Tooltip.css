@@ -1,0 +1,40 @@
+.tooltip-text {
+    background-color: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.875em;
+    max-width: 250px;
+    word-wrap: break-word;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+    z-index: 2000;
+    position: absolute;
+    white-space: pre-wrap;
+
+}
+
+.tooltip-container .tooltip-icon::after {
+    display: inline-block;
+    margin-left: 4px;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    border-radius: 50%;
+    background-color: #007bff;
+    color: #fff;
+    text-align: center;
+}
+
+.tooltip-icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    line-height: 20px;
+    text-align: center;
+    border-radius: 50%;
+    background-color: #fff;
+    color: #ae9d9d;
+    font-size: 14px;
+    cursor: pointer;
+}
