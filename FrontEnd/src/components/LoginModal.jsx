@@ -1,11 +1,10 @@
-import '../styles/LoginModal.css'; // 스타일 파일
+import '../styles/LoginModal.css';
 import { useState } from 'react';
 import SocialKakao from './SocialKakao';
 import SocialNaver from './SocialNaver';
 
 const LoginModal = ({ isOpen, closeModal }) => {
 
-    // 상태 관리
     const [isSocialKakaoOpen, setIsSocialKakaoOpen] = useState(false);
     const [isSocialNaverOpen, setIsSocialNaverOpen] = useState(false);
 

@@ -17,9 +17,7 @@
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     max-width: 250px;
-    /* 모달 크기 설정 */
     width: 90%;
-    /* 반응형 조절 */
     text-align: center;
     margin: auto;
 }

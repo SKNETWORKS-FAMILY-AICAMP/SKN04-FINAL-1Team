@@ -25,7 +25,6 @@
     margin-left: 220px;
 }
 
-/* 모달 헤더 스타일 */
 .notice-header {
     display: flex;
     justify-content: space-between;
@@ -33,7 +32,6 @@
     margin-bottom: 15px;
 }
 
-/* 닫기 버튼 스타일 */
 .notice-closebtn {
     background: transparent;
     border: none;
@@ -41,9 +39,7 @@
     cursor: pointer;
 }
 
-/* 모달 내용 스타일 */
 .notice-modal-body {
-    /* 필요한 스타일 추가 */
     max-height: 60vh;
     overflow-y: auto;
     border: none;

@@ -123,4 +123,6 @@
 
 .star-icon {
     cursor: pointer;
+    height: 5px;
+    top: 0;
 }

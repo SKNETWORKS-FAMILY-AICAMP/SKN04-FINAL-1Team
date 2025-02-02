@@ -1,4 +1,3 @@
-// src/components/Sidebar.jsx
 import { useState, useEffect } from 'react';
 import '../styles/Sidebar.css';
 import LoginModal from './LoginModal';
@@ -15,10 +14,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isFavoriteOpen, setIsFavoriteOpen] = useState(false);
   const [isChatLogOpen, setIsChatLogOpen] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(() => {
-    const stored = localStorage.getItem('isChatOpen');
-    return stored !== null ? JSON.parse(stored) : false;
-  });
 
   const [isLoggedIn, setIsLoggedIn] = useState(
     localStorage.getItem('isLoggedIn') === 'true'
@@ -48,20 +43,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   const closeFavorite = () => {
     setIsFavoriteOpen(false);
-  }
+  };
 
   const closeFeedback = () => {
     setIsFeedbackOpen(false);
-  };
-
-  const closeChatLog = () => {
-    setIsChatLogOpen(false);
-  };
-
-  const toggleChatLog = () => {
-    closeAllModal()
-    setIsChatLogOpen(!isChatLogOpen);
-
   };
 
   const toggleNotice = () => {
@@ -81,19 +66,17 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   const toggleFavorite = () => {
     closeAllModal();
-    setIsFavoriteOpen(!isFavoriteOpen)
-  }
+    setIsFavoriteOpen(!isFavoriteOpen);
+  };
 
   const handleLogOut = () => {
     localStorage.removeItem('isLoggedIn');
     localStorage.setItem('isChatOpen', 'false');
     setIsLoggedIn(false);
-    setIsChatOpen(false);
     alert('안녕히 가세요!');
-
     setTimeout(() => {
       window.location.reload();
-    }, 100)
+    }, 100);
   };
 
   const closeAllModal = () => {
@@ -101,7 +84,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     setIsNoticeOpen(false);
     setIsGuideOpen(false);
     setIsFeedbackOpen(false);
-    setIsChatOpen(false);
     setIsFavoriteOpen(false);
     setIsChatLogOpen(false);
     localStorage.setItem('isChatOpen', 'false');
@@ -111,12 +93,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     <>
       <div className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
         <div className='btn'>
-          <button className='btn-home'
-            onClick={() => window.location.reload()}>
-            <img
-              className='icon-home'
-              src="/images/home.png"
-              alt="홈" />
+          <button className='btn-home' onClick={() => window.location.reload()}>
+            <img className='icon-home' src="/images/home.png" alt="홈" />
             <span>홈</span>
           </button>
           {isLoggedIn ? (
@@ -147,7 +125,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             <span>즐겨찾기</span>
           </button>
           <hr />
-          <button onClick={toggleChatLog}>
+
+          <button onClick={() => {
+            setIsChatLogOpen(!isChatLogOpen)
+          }}>
             <img className='icon-chatlog' src='/images/chatLog.png' alt="채팅로그" />
             <span>채팅로그</span>
           </button>
@@ -159,18 +140,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       </button>
 
       <LoginModal isOpen={isModalOpen} closeModal={closeModal} />
-
       <Notice isOpen={isNoticeOpen} closeModal={closeNotice} />
-
       <Userguide isOpen={isGuideOpen} closeModal={closeGuide} />
-
       <Feedback isOpen={isFeedbackOpen} closeModal={closeFeedback} />
-
       <Favorite isOpen={isFavoriteOpen} closeModal={closeFavorite} />
-
-      <ChatLog isOpen={isChatLogOpen} closeModal={closeChatLog} />
+      {isChatLogOpen && <ChatLog />}
     </>
   );
-}
+};
 
 export default Sidebar;

@@ -8,7 +8,6 @@ class ErrorBoundary extends Component {
     }
 
     static getDerivedStateFromError(error) {
-        // 오류 발생 시 상태 업데이트
         return { hasError: true };
     }
 
@@ -18,7 +17,6 @@ class ErrorBoundary extends Component {
 
     render() {
         if (this.state.hasError) {
-            // 에러 발생 시 보여줄 페이지 (에러 모달 페이지 컴포넌트 연결)
             return (
                 <div className='errorboundary-overlay'>
                     <div className='errorboundary-modal'>
@@ -46,7 +44,6 @@ class ErrorBoundary extends Component {
             );
         }
 
-        // 정상 렌더링
         return this.props.children;
     }
 }

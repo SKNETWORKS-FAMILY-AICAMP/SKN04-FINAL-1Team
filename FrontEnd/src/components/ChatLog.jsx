@@ -1,46 +1,85 @@
+import { useState, useEffect } from 'react';
+import ChatWindow from './ChatWindow';
 import '../styles/ChatLog.css';
-import ReactMarkdown from 'react-markdown'
 
-
-const ChatLog = ({ isOpen, closeModal, loadSelectedChat }) => {
-    if (!isOpen) return null;
-
-    const savedMessages = JSON.parse(localStorage.getItem('chatMessages')) || [];
-
-    const handleOverlayClick = (e) => {
-        if (e.target.classList.contains('chatlog-overlay')) {
-            closeModal();
+const ChatLog = () => {
+    const [chatSessions, setChatSessions] = useState([]);
+    const [currentSessionId, setCurrentSessionId] = useState(null);
+    const [isOpen, setIsOpen] = useState(true);
+    useEffect(() => {
+        const storedChats = localStorage.getItem('chatSessions');
+        if (storedChats) {
+            setChatSessions(JSON.parse(storedChats));
         }
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem('chatSessions', JSON.stringify(chatSessions));
+    }, [chatSessions]);
+
+    const createNewChat = () => {
+        const newSession = { id: Date.now(), messages: [] };
+        setChatSessions(prevSessions => [newSession, ...prevSessions]);
+        setCurrentSessionId(newSession.id);
     };
 
-    const handleSelectChat = () => {
-        loadSelectedChat(savedMessages);
-        closeModal();
+    const selectChat = (sessionId) => {
+        setCurrentSessionId(sessionId);
     };
+
+    const currentSession = chatSessions.find(session => session.id === currentSessionId) || { id: currentSessionId, messages: [] };
 
     return (
-        <div className='chatlog-overlay' onClick={handleOverlayClick}>
-            <div className='chatlog-modal' onClick={(e) => e.stopPropagation()}>
-                <div className='chatlog-header'>
-                    <h3>채팅 로그</h3>
-                    <button className="chatlog-closebtn" onClick={closeModal}>
-                        &times;
-                    </button>
-                </div>
-                <div className='chatlog-content'>
-                    {savedMessages.map((msg, index) => (
-                        <div
-                            key={index}
-                            className={`chatlog-message ${msg.role}`}
-                            onClick={handleSelectChat}
-                        >
-                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+        <>
+            {isOpen && (
+                <>
+                    <div className={`chatlog-module ${currentSessionId ? 'active' : ''}`}>
+                        <div className="chatlog-sidebar">
+                            <button onClick={createNewChat} className="new-chat-btn">
+                                + New Chat
+                            </button>
+                            <button className="chat-closebtn" onClick={() => setIsOpen(false)}>
+                                &times;
+                            </button>
+                            <ul className="chat-session-list">
+                                {chatSessions.map(session => {
+                                    const summary = session.messages.length > 0
+                                        ? session.messages[0].content.slice(0, 30) + (session.messages[0].content.length > 30 ? '...' : '')
+                                        : '새 대화';
+                                    return (
+                                        <li
+                                            key={session.id}
+                                            className={`chat-session-item ${session.id === currentSessionId ? 'active' : ''}`}
+                                            onClick={() => selectChat(session.id)}
+                                        >
+                                            {summary}
+                                        </li>
+                                    );
+                                })}
+                            </ul>
                         </div>
-                    ))}
-                </div>
-            </div>
-        </div>
+                    </div>
+
+                    <div className="chatlog-main">
+                        {currentSessionId !== null && (
+                            <ChatWindow
+                                key={currentSessionId}
+                                session={currentSession}
+                                updateSession={(updatedSession) => {
+                                    setChatSessions(prevSessions =>
+                                        prevSessions.map(session =>
+                                            session.id === updatedSession.id ? updatedSession : session
+                                        )
+                                    );
+                                }}
+                            />
+                        )}
+                    </div>
+                </>
+            )}
+        </>
     );
+
 };
 
 export default ChatLog;

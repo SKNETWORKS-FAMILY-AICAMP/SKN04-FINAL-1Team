@@ -12,13 +12,11 @@
 
 .sidebar.open {
   transform: translateX(0);
-  /* max-width: 200px; */
   opacity: 1;
 }
 
 .sidebar.closed {
   transform: translateX(-100%);
-  /* max-width: 0; */
   opacity: 0;
 }
 
@@ -41,7 +39,6 @@
   cursor: pointer;
   border-radius: 5px;
   transition: background-color 0.2s ease;
-  /* 버튼 색상 전환 */
 }
 
 .sidebarToggle:hover {
@@ -83,24 +80,20 @@ hr {
 
 .chat-header {
   padding: 10px;
-  /* background: #007BFF; */
   color: black;
   font-weight: bold;
   display: flex;
   justify-content: space-between;
   align-items: center;
   z-index: 1401;
-  /* 헤더가 항상 위에 보이게 설정 */
 }
 
 .chat-body {
   padding: 10px;
   height: calc(100% - 40px);
-  /* overflow-y: auto; */
   border-top: 1px solid #ddd;
 }
 
-/* 버튼 스타일 */
 .chat-header button {
   background: transparent;
   border: none;

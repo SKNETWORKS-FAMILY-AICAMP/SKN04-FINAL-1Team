@@ -1,7 +1,7 @@
 import '../styles/NoticeModal.css'
 
 const NoticeModal = ({ isOpen, onClose }) => {
-    if (!isOpen) return null; // 모달이 닫혀있으면 렌더링하지 않음
+    if (!isOpen) return null;
 
     return (
         <div className="noticemodal-overlay" onClick={onClose}>
