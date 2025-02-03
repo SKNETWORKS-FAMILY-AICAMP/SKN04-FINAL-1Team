@@ -1,0 +1,15 @@
+django==4.2.18
+djangorestframework
+django-cors-headers
+gunicorn
+psycopg2-binary
+langchain
+langchain_community
+langchain_openai
+python-dotenv
+openai
+pandas
+numpy
+whitenoise
+django-filter
+drf-yasg

@@ -1,0 +1,49 @@
+.kakao-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.map {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  bottom: 0;
+  position: absolute;
+  touch-action: none;
+  background-color: #eee;
+}
+
+.box {
+  width: 300px;
+  padding: 10px;
+  height: 100px;
+  overflow: hidden;
+  transition: height 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  width: auto;
+  border-radius: 10px;
+}
+
+.wrap {
+  width: 300px;
+  border-radius: 10px !important;
+}
+
+.wrap .info .body .desc .content-btn {
+  width: 100px;
+  /* 또는 원하는 너비 */
+  margin: 0 auto;
+  /* 부모 요소 내에서 가로 중앙 정렬 */
+  padding: 8px;
+  font-size: 14px;
+  background-color: blue;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}

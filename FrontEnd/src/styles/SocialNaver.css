@@ -1,0 +1,11 @@
+.naverloginbtn {
+    border: none;
+    background-color: #03c75a;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.naverlogin {
+    width: 183px;
+    height: 45px;
+}

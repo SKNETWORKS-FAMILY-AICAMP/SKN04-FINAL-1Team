@@ -1,0 +1,53 @@
+.login-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1420;
+}
+
+.login-modal {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 250px;
+    width: 90%;
+    text-align: center;
+    margin: auto;
+}
+
+.login-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.login-header h2 {
+    font-size: 20px;
+}
+
+.login-header button {
+    border: none;
+    background: white;
+    cursor: pointer;
+}
+
+.login-header img {
+    width: 50px;
+    height: 50px;
+    margin-left: 10px;
+    margin-bottom: 20px;
+}
+
+.sociallogin {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}

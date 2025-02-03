@@ -1,0 +1,180 @@
+.feedback-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    z-index: 1400;
+}
+
+.feedback-modal {
+    background: white;
+    width: 300px;
+    height: 90%;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-left: 220px;
+}
+
+.feedback-closebtn {
+    background: transparent;
+    border: none;
+    font-size: 30px;
+    cursor: pointer;
+}
+
+
+.feedback-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.feedback-text-header {
+    width: 95%;
+    resize: none;
+    border-radius: 10px;
+    padding-top: 5px;
+    padding-left: 10px;
+    font-size: 18px;
+    height: 25px;
+}
+
+.feedback-text-main {
+    width: 95%;
+    height: 100px;
+    background: white;
+    border-radius: 10px;
+    font-size: 18px;
+    padding-top: 10px;
+    padding-left: 10px;
+    resize: none;
+    border: none;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid;
+}
+
+.feedback-first-container {
+    background-color: white;
+    border-radius: 5px;
+    height: 220px;
+    font-size: 30px;
+    border: 1px solid;
+}
+
+.feedback-first-container h2 {
+    font-size: 20px;
+    text-align: center;
+}
+
+.feedback-slider-container {
+    display: flex;
+    gap: 5px;
+    flex-direction: column;
+    text-align: center;
+}
+
+.feedback-slider-container-p {
+    margin-top: 5px;
+}
+
+.feedback-slider-img {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.feedback-slider-img img {
+    width: 50px;
+    height: 50px;
+}
+
+.feedback-slider-p {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding-left: 30px;
+    padding-right: 30px;
+    font-size: 15px;
+    height: 25px;
+}
+
+.feedback-first-container-p {
+    align-content: center;
+}
+
+.feedback-second-container {
+    background-color: white;
+    border-radius: 5px;
+    height: 370px;
+    text-align: center;
+    border: 1px solid;
+}
+
+.feedback-second-container h2 {
+    font-size: 21px;
+}
+
+.feedback-second-container p {
+    font-size: 15px;
+}
+
+.feedback-star-container {
+    display: "flex";
+    gap: "5px";
+    font-size: 25px;
+    cursor: pointer;
+}
+
+.feedback-sendbtn {
+    border: none;
+    border-radius: 10px;
+    background: rgb(76, 181, 249);
+    font-size: 25px;
+    cursor: pointer;
+    width: 100%;
+    height: 50px;
+    color: white;
+}
+
+.feedback-modal-btn .sendbtn {
+    background: rgb(76, 181, 249);
+    color: white;
+    cursor: pointer;
+    border: none;
+    width: 100%;
+    height: 50px;
+    border-radius: 10px;
+    font-size: 20px;
+}
+
+.feedback-sendbtn.active {
+    background: rgb(0, 149, 246);
+    color: white;
+    border: none;
+}
+
+.feedback-sendbtn:disabled {
+    background: rgb(76, 181, 249);
+    color: white;
+    cursor: not-allowed;
+    pointer-events: none;
+    border: none;
+}
+
+.feedback-sendbtn.active:hover {
+    background: rgb(24, 119, 242);
+    border: none;
+}
