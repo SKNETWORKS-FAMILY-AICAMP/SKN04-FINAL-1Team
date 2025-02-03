@@ -11,3 +11,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 USER airflow 
+
+# 파이썬 패키지 설치
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+RUN pip install djangorestframework-simplejwt==5.3.1 

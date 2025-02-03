@@ -1,0 +1,34 @@
+{% extends "rest_framework/login_base.html" %}
+
+{% block title %}로그인{% endblock %}
+
+{% block branding %}
+    <h3 style="margin: 0 0 20px;">로그인</h3>
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>오류:</strong> 잘못된 사용자명이나 비밀번호입니다.
+            </div>
+        {% endif %}
+        
+        <form class="form-signin" role="form" action="{% url 'rest_framework:login' %}" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_username">사용자명:</label>
+                <input type="text" name="username" class="form-control" placeholder="사용자명" required autofocus>
+            </div>
+            
+            <div class="form-group">
+                <label for="id_password">비밀번호:</label>
+                <input type="password" name="password" class="form-control" placeholder="비밀번호" required>
+            </div>
+            
+            <input type="hidden" name="next" value="{{ next }}" />
+            
+            <button class="btn btn-lg btn-primary btn-block" type="submit">로그인</button>
+        </form>
+    </div>
+{% endblock %} 
