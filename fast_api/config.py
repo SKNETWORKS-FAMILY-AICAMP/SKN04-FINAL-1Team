@@ -12,9 +12,10 @@ load_dotenv()
 
 # ✅ PostgreSQL 접속 정보
 DB_CONFIG = {
-    "user": os.getenv("DB_USER", "postgres"),       # 기본값: "postgres"
-    "password": os.getenv("DB_PASSWORD", "1234"),   # 기본값: "1234"
-    "host": os.getenv("DB_HOST", "localhost"),      # 기본값: "localhost"
-    "port": os.getenv("DB_PORT", "5432"),           # 기본값: "5432"
-    "database": os.getenv("DB_NAME", "real_estate") # 기본값: "real_estate"
+    "user": os.getenv("POSTGRES_USER", "realestate"),       # 기본값: "postgres"
+    "password": os.getenv("POSTGRES_PASSWORD", "realestate"),   # 기본값: "1234"
+    "host": os.getenv("POSTGRES_HOST", "postgres-data"),      # 기본값: "localhost"
+    "port": os.getenv("POSTGRES_PORT", "5432"),           # 기본값: "5432"
+    "database": os.getenv("POSTGRES_DB", "realestate") # 기본값: "real_estate"
 }
+
