@@ -133,7 +133,7 @@ base_prompt : |
 
 
   ### 테이블/컬럼 설명 및 관계
-  - 'addresses' : 주소의 id와 이름, 좌표 정보를 담고 있는 테이블, 'address_id'는 'location_distances'테이블과 'property_locations'테이블과 연결된다. 'area_name'은 지하철역, 편의시설, 축제 등의 이름이다.
+  - 'addresses' : 주소의 id와 이름, 좌표 정보를 담고 있는 테이블, 'id'는 'location_distances'테이블과 'property_locations'테이블과 연결된다. 'area_name'은 지하철역, 편의시설, 축제 등의 이름이다.
   - 'location_distances' : 주소 간의 거리 정보를 담고 있는 테이블, 'id'는 'property_info'테이블과 'addresses'테이블과 연결된다.
   - 'rentals' : 임대 매물의 정보를 담고 있는 테이블
   - 'sales' : 매매 매물의 정보를 담고 있는 테이블
@@ -149,7 +149,7 @@ base_prompt : |
     
   ### 거리 관련 요청
   - 모든 거리에 대한 요청은 m단위로 계산하라. ex) 1km -> 1000m
-  - 거리에 대한 요청은 우선적으로 'location_distances'테이블을 참고하라. 'distances'는 'property_id'를 기준으로 반경 1000m 이내에 있는 'address_id'와의 거리를 나타낸다.
+  - 거리에 대한 요청은 우선적으로 'location_distances'테이블을 참고하라. 'distances'는 'property_id'를 기준으로 반경 1000m 이내에 있는 'id'와의 거리를 나타낸다.
   - 'location_distances'테이블에 관련 정보가 없는 경우에는 'addresses'테이블과 'property_locations'테이블에서 요청받은 두 지점의 latitude(위도), longitude(경도)를 찾은 후,
     Haversine 공식을 사용하여 두 지점 간의 직선거리를 계산하라. 이 때, 지구의 반지름은 6371km로 가정한다.
   - 사람이 걷는 평균 속도는 4km/h로 계산하라. 예를 들어 '걸어서 10분 거리'라는 요청은 두 좌표 상의 직선거리를 660m(=0.66km)로 치환해서 계산하라.
@@ -161,8 +161,8 @@ base_prompt : |
 
   예시
   입력: '강남역 근처의 아파트 5개 찾아줘.'
-  1단계. 'addresses'테이블에서 'area_name'이 '강남역'인 'address_id'를 조회한다.
-  2단계. 'location_distances'테이블에서 'address_id'가 강남역의 'address_id'와 같은 'property_id'를 조회한다.
+  1단계. 'addresses'테이블에서 'area_name'이 '강남역'인 'id'를 조회한다.
+  2단계. 'location_distances'테이블에서 'id'가 강남역의 'id'와 같은 'property_id'를 조회한다.
   3단계. 'property_id'를 참고하여 나머지 조건을 만족하는 Query문을 작성한다.
 
 
@@ -210,14 +210,17 @@ base_prompt : |
       - pi.property_type LIKE '%APARTMENT%' -> 아파트
       - pi.property_type LIKE '%COMMERCIAL%' -> 상가
   16. 개수 제한은 따로 언급이 없으면 limit 5로 하세요.
+  17. ORDER BY에 들어가는 칼럼은 반드시 SELECT에 포함시켜주세요.
+  18. 공원은 cf.facility_type에 있습니다.
+      - cf.facility_type = '%자연_공원%' -> 공원
 
 rentals_prompt : |
-  17. rental_type 값은 다음과 같습니다:
+  19. rental_type 값은 다음과 같습니다:
       - 30051B1 : 전세
       - 30051B2 : 월세
       - 30051B3 : 단기임대
 
-  18. rentals 테이블에 price라는 컬럼이 없습니다. rentals 테이블에는 price 대신 deposit(보증금)과 monthly_rent(월세) 컬럼이 존재합니다.
+  20. rentals 테이블에 price라는 컬럼이 없습니다. rentals 테이블에는 price 대신 deposit(보증금)과 monthly_rent(월세) 컬럼이 존재합니다.
 
   ### 월세 예시 질문과 쿼리:
 
@@ -245,7 +248,7 @@ rentals_prompt : |
   JOIN rentals r ON r.property_id = pi.property_id
   JOIN property_locations pl ON pl.property_id = pi.property_id
   JOIN location_distances ld ON pi.property_id = ld.property_id
-  JOIN addresses a ON a.address_id = ld.address_id
+  JOIN addresses a ON a.id = ld.id
   WHERE r.rental_type = '30051B1'
   AND r.deposit <= 1000000000
   AND a.area_name LIKE '%강남%'
@@ -279,7 +282,7 @@ sales_prompt : |
   JOIN sales s ON s.property_id = pi.property_id
   JOIN property_locations pl ON pl.property_id = pi.property_id
   JOIN location_distances ld ON pi.property_id = ld.property_id
-  JOIN addresses a ON a.address_id = ld.address_id
+  JOIN addresses a ON a.id = ld.id
   WHERE pi.property_type = 'APARTMENT'
   AND s.price <= 1500000000
   AND a.area_name LIKE '%강동%'
