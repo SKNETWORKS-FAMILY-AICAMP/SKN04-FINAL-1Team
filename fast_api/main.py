@@ -2,7 +2,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, Body
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-import json
 from edges import llm_app
 from nodes import latest_properties
 from utils import config
@@ -22,19 +21,21 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 async def real_estate_info():
     return {"info": "API는 부동산 관련 요청을 처리할 준비가 되었습니다"}
 
-# 스트리밍 응답 함수
 async def stream_llm_response(query_text: str):
     try:
         for chunk in llm_app.stream({'messages': query_text}, config=config, stream_mode="messages"):
+            # 🚀 각 응답을 일정 시간마다 출력하도록 딜레이 추가 (예: 0.5초)
+
             if chunk[1]['langgraph_node'] == "Re_Questions":
                 yield chunk[0].content + ""
-            if chunk[1]['langgraph_node'] == "No_Result_Answer":
+            elif chunk[1]['langgraph_node'] == "No_Result_Answer":
                 yield chunk[0].content + ""
-            if chunk[1]['langgraph_node'] == "Generate_Response":
+            elif chunk[1]['langgraph_node'] == "Generate_Response":
                 yield chunk[0].content + ""
 
     except Exception as e:
         yield f"Error: {str(e)}\n"
+
                 
 
 # POST 요청: 사용자 입력 받아 AI 모델에 전달 (스트리밍 방식)
