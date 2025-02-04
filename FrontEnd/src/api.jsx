@@ -49,15 +49,27 @@ export const fetchPropertyLocations = async (params = {}) => {
 
 export const fetchPropertyLocationById = async (property_id) => {
     try {
-        const response = await axios.get(`${API_BASE_URL}property-locations/by_property_id/`, {
-            params: { property_id }
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error("인증 토큰이 없습니다. 로그인 후 다시 시도하세요.");
+        }
+
+        const response = await axios.get(`${API_BASE_URL}property-locations/${property_id}/`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            withCredentials: true
         });
+
         return response.data;
     } catch (error) {
-        console.error("property_id로 부동산 위치 조회 중 오류:", error);
+        console.error("property_id로 부동산 정보를 조회하는 중 오류:", error.response?.data || error.message);
         throw error;
     }
 };
+window.fetchPropertyLocationById = fetchPropertyLocationById;
+
 
 export const fetchPropertyInfo = async (params = {}) => {
     try {
@@ -81,15 +93,31 @@ export const fetchActiveProperties = async () => {
 
 export const fetchPropertyInfoById = async (property_id) => {
     try {
-        const response = await axios.get(`${API_BASE_URL}property-info/by_property_id/`, {
-            params: { property_id }
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error("인증 토큰이 없습니다. 로그인 후 다시 시도하세요.");
+        }
+
+        const response = await axios.get(`${API_BASE_URL}property-info/${property_id}/`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            withCredentials: true
         });
+
         return response.data;
     } catch (error) {
-        console.error("property_id로 부동산 정보를 조회하는 중 오류:", error);
+        console.error("property_id로 부동산 정보를 조회하는 중 오류:", error.response?.data || error.message);
         throw error;
     }
 };
+
+// ✅ window 객체에 함수 추가 (테스트용)
+window.fetchPropertyInfoById = fetchPropertyInfoById;
+
+
+
 
 export const fetchRentals = async (params = {}) => {
     try {
@@ -113,15 +141,37 @@ export const fetchRentalPriceRange = async (params = {}) => {
 
 export const fetchRentalByPropertyId = async (property_id) => {
     try {
-        const response = await axios.get(`${API_BASE_URL}rentals/by_property_id/`, {
-            params: { property_id }
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error("로그인이 필요합니다.");
+        }
+
+        const response = await axios.get(`${API_BASE_URL}rentals/${property_id}/`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            withCredentials: true
         });
+
+        if (response.status === 200) {
+            console.log("✅ 임대 정보 조회 성공:", response.data);
+        }
+
         return response.data;
     } catch (error) {
-        console.error("property_id로 임대 정보를 조회하는 중 오류:", error);
-        throw error;
+        console.error("property_id로 임대 정보를 조회하는 중 오류:", error.response?.data || error.message);
+        return null;
     }
 };
+
+
+
+
+window.fetchRentalByPropertyId = fetchRentalByPropertyId;
+
+
+
 
 export const fetchSales = async (params = {}) => {
     try {
@@ -145,15 +195,33 @@ export const fetchSalePriceRange = async (params = {}) => {
 
 export const fetchSaleByPropertyId = async (property_id) => {
     try {
-        const response = await axios.get(`${API_BASE_URL}sales/by_property_id/`, {
-            params: { property_id }
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error("로그인이 필요합니다.");
+        }
+
+        const response = await axios.get(`${API_BASE_URL}sales/${property_id}/`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            withCredentials: true
         });
+        console.log(response)
+
+        if (response.status === 200) {
+            console.log("✅ 임대 정보 조회 성공:", response.data);
+        }
+
         return response.data;
     } catch (error) {
-        console.error("property_id로 매매 정보를 조회하는 중 오류:", error);
-        throw error;
+        console.error("property_id로 임대 정보를 조회하는 중 오류:", error.response?.data || error.message);
+        return null;
     }
 };
+window.fetchSaleByPropertyId = fetchSaleByPropertyId;
+
+
 
 export const loginUser = async (credentials) => {
     try {
@@ -190,7 +258,15 @@ export const registerUser = async (data) => {
 
 export const fetchChatSessions = async () => {
     try {
-        const response = await axios.get(`${API_BASE_URL}chats/sessions/`);
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error("로그인 후 이용 가능합니다.");
+        const response = await axios.get(`${API_BASE_URL}chats/sessions/`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            withCredentials: true,
+        });
         return response.data;
     } catch (error) {
         console.error("채팅 세션 데이터를 가져오는 중 오류:", error);
@@ -200,8 +276,15 @@ export const fetchChatSessions = async () => {
 
 export const fetchChatSessionMessages = async (session_id) => {
     try {
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error("로그인 후 이용 가능합니다.");
         const response = await axios.get(`${API_BASE_URL}chats/session-messages/`, {
-            params: { session_id }
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            params: { session_id },
+            withCredentials: true,
         });
         return response.data;
     } catch (error) {
@@ -232,6 +315,7 @@ export const postFeedback = async (feedbackData) => {
         throw error;
     }
 };
+
 export const fetchNotices = async () => {
     try {
         const response = await axios.get(`${API_BASE_URL}notices/`);
@@ -264,13 +348,28 @@ export const postUserLog = async (logData) => {
 
 export const fetchMyFavorites = async () => {
     try {
-        const response = await axios.get(`${API_BASE_URL}favorites/my-favorites/`);
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error("인증 토큰이 없습니다. 로그인 후 다시 시도하세요.");
+        }
+
+        const response = await axios.get(`${API_BASE_URL}favorites/`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            withCredentials: true
+        });
+
         return response.data;
     } catch (error) {
-        console.error("즐겨찾기 데이터를 가져오는 중 오류:", error);
+        console.error("property_id로 부동산 정보를 조회하는 중 오류:", error.response?.data || error.message);
         throw error;
     }
 };
+window.fetchMyFavorites = fetchMyFavorites;
+
+
 
 export const fetchCrimeStats = async (params = {}) => {
     try {

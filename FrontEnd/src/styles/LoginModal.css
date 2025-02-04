@@ -103,6 +103,7 @@
 }
 
 .loginmodalbtn>button {
+    cursor: pointer;
     border: none;
     color: black;
     border-radius: 10px;

@@ -34,6 +34,12 @@ const LoginModal = ({ isOpen, closeModal, openRegisterModal, onLoginSuccess }) =
         }
     };
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleLogin()
+        }
+    }
+
     return (
         isOpen && (
             <div className="login-modal-overlay" onClick={closeModal}>
@@ -61,6 +67,7 @@ const LoginModal = ({ isOpen, closeModal, openRegisterModal, onLoginSuccess }) =
                                 id="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                onKeyDown={handleKeyDown}
                             />
                             <label htmlFor="password">비밀번호</label>
                         </div>

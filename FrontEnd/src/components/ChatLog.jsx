@@ -1,36 +1,54 @@
 import { useState, useEffect } from 'react';
 import ChatWindow from './ChatWindow';
 import '../styles/ChatLog.css';
+import { fetchChatSessions, fetchChatSessionMessages } from '../api';
 
-const ChatLog = () => {
+const ChatLog = ({ setProperties }) => {
     const [chatSessions, setChatSessions] = useState([]);
     const [currentSessionId, setCurrentSessionId] = useState(null);
     const [isOpen, setIsOpen] = useState(true);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
-        const storedChats = localStorage.getItem('chatSessions');
-        if (storedChats) {
-            setChatSessions(JSON.parse(storedChats));
-        }
-
         const loggedInStatus = localStorage.getItem('isLoggedIn') === 'true';
         setIsLoggedIn(loggedInStatus);
+        if (loggedInStatus) {
+            fetchChatSessions()
+                .then((data) => {
+                    setChatSessions(data);
+                    if (data.length > 0) {
+                        setCurrentSessionId(data[0].session_id);
+                    }
+                })
+                .catch((error) => console.error("채팅 세션 데이터를 가져오는 중 오류:", error));
+        }
     }, []);
 
     useEffect(() => {
-        localStorage.setItem('chatSessions', JSON.stringify(chatSessions));
-    }, [chatSessions]);
+        if (currentSessionId) {
+            fetchChatSessionMessages(currentSessionId)
+                .then((data) => {
+                    setChatSessions((prevSessions) =>
+                        prevSessions.map((session) =>
+                            session.session_id === currentSessionId ? { ...session, messages: data } : session
+                        )
+                    );
+                })
+                .catch((error) => console.error("채팅 메시지 데이터를 가져오는 중 오류:", error));
+        }
+    }, [currentSessionId]);
 
     const createNewChat = () => {
         if (!isLoggedIn) {
             alert('로그인이 필요합니다.');
             return;
         }
-
-        const newSession = { id: Date.now(), messages: [] };
-        setChatSessions(prevSessions => [newSession, ...prevSessions]);
-        setCurrentSessionId(newSession.id);
+        const newSession = {
+            session_id: Date.now().toString(),
+            messages: []
+        };
+        setChatSessions((prev) => [newSession, ...prev]);
+        setCurrentSessionId(newSession.session_id);
     };
 
     const selectChat = (sessionId) => {
@@ -41,7 +59,9 @@ const ChatLog = () => {
         setCurrentSessionId(sessionId);
     };
 
-    const currentSession = chatSessions.find(session => session.id === currentSessionId) || { id: currentSessionId, messages: [] };
+    const currentSession = chatSessions.find(
+        (session) => session.session_id === currentSessionId
+    ) || { session_id: currentSessionId, messages: [] };
 
     if (!isLoggedIn) {
         return <p className="chat-login-message">로그인 후 이용 가능합니다.</p>;
@@ -60,15 +80,17 @@ const ChatLog = () => {
                                 &times;
                             </button>
                             <ul className="chat-session-list">
-                                {chatSessions.map(session => {
-                                    const summary = session.messages.length > 0
-                                        ? session.messages[0].content.slice(0, 30) + (session.messages[0].content.length > 30 ? '...' : '')
+                                {chatSessions.map((session) => {
+                                    const summary = session.messages?.[0]?.message
+                                        ? session.messages[0].message.slice(0, 30) +
+                                        (session.messages[0].message.length > 30 ? '...' : '')
                                         : '새 대화';
                                     return (
                                         <li
-                                            key={session.id}
-                                            className={`chat-session-item ${session.id === currentSessionId ? 'active' : ''}`}
-                                            onClick={() => selectChat(session.id)}
+                                            key={session.session_id}
+                                            className={`chat-session-item ${session.session_id === currentSessionId ? 'active' : ''
+                                                }`}
+                                            onClick={() => selectChat(session.session_id)}
                                         >
                                             {summary}
                                         </li>
@@ -83,10 +105,11 @@ const ChatLog = () => {
                             <ChatWindow
                                 key={currentSessionId}
                                 session={currentSession}
+                                setProperties={setProperties}
                                 updateSession={(updatedSession) => {
-                                    setChatSessions(prevSessions =>
-                                        prevSessions.map(session =>
-                                            session.id === updatedSession.id ? updatedSession : session
+                                    setChatSessions((prevSessions) =>
+                                        prevSessions.map((session) =>
+                                            session.session_id === updatedSession.session_id ? updatedSession : session
                                         )
                                     );
                                 }}

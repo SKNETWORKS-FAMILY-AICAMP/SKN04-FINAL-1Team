@@ -159,27 +159,24 @@ class ChatSerializer(serializers.ModelSerializer):
         read_only_fields = ('user', 'ai_response', 'created_at')
 
     def create(self, validated_data):
-        # 사용자 메시지 저장
+        # 만약 message_type이 'bot'이면 AI 응답 생성 로직 없이 저장
+        if validated_data.get('message_type') == 'bot':
+            return Chat.objects.create(**validated_data)
+        # 그렇지 않으면, 사용자 메시지일 때만 AI 응답 생성
         chat = Chat.objects.create(**validated_data)
-        
-        # 메시지 타입이 'user'인 경우에만 AI 응답 생성
         if chat.message_type == 'user':
             try:
-                # AI 응답 생성
-                response = ""
+                response_text = ""
                 for chunk in stream_response({"message": chat.message, "table": DB_SCHEMA}, config=OPENAI_CONFIG):
                     if chunk[1]['langgraph_node'] in ["Re_Questions", "No_Result_Answer", "Generate_Response"]:
-                        response += chunk[0].content
-
-                chat.ai_response = response
+                        response_text += chunk[0].content
+                chat.ai_response = response_text
                 chat.save()
-                
             except Exception as e:
-                chat.ai_response = f"AI 응답 생성 중 오류가 발생했습니다: {str(e)}"
+                chat.ai_response = f"AI 응답 생성 중 오류: {str(e)}"
                 chat.save()
-
         return chat
-
+    
 class FeedbackSerializer(serializers.ModelSerializer):
     class Meta:
         model = Feedback
@@ -232,21 +229,25 @@ class CulturalFacilitySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class PropertyLocationSerializer(serializers.ModelSerializer):
+    property_id = serializers.IntegerField(source="property.id", read_only=True)  # ✅ ForeignKey를 올바르게 매핑
+
     class Meta:
         model = PropertyLocation
         fields = '__all__'
 
 class PropertyInfoSerializer(serializers.ModelSerializer):
-    location_info = serializers.SerializerMethodField()
-    
+    location_info = serializers.SerializerMethodField() 
+
     class Meta:
         model = PropertyInfo
         exclude = ('property_id',)
 
-    def get_location_info(self, obj):
-        if hasattr(obj, 'property_id'):
-            return PropertyLocationSerializer(obj.property_id).data
-        return None
+    def get_location_info(self, obj):  # ✅ 이 함수가 없으면 오류 발생함!
+        try:
+            property_location = PropertyLocation.objects.filter(property_id=obj.id).first()
+            return PropertyLocationSerializer(property_location).data if property_location else None
+        except Exception as e:
+            return {"error": f"위치 정보를 가져오는 중 오류 발생: {str(e)}"}
 
 class RentalSerializer(serializers.ModelSerializer):
     property_details = serializers.SerializerMethodField()

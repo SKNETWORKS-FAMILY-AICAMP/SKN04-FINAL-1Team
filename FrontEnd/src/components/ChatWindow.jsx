@@ -1,9 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import axios from 'axios';
 import '../styles/ChatWindow.css';
 
-const ChatWindow = ({ session = { messages: [] }, updateSession = () => { }, closeChatWindow }) => {
-    const [messages, setMessages] = useState(session.messages);
+const API_BASE_URL = 'http://localhost:8000/api/';
+const FASTAPI_URL = 'http://localhost:8001/real_estate';
+const PROPERTIES_URL = 'http://localhost:8001/properties';
+
+function ChatWindow({
+    session = { session_id: '', messages: [] },
+    updateSession = () => { },
+    closeChatWindow,
+    setProperties
+}) {
+    const [messages, setMessages] = useState(session.messages || []);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -21,64 +31,112 @@ const ChatWindow = ({ session = { messages: [] }, updateSession = () => { }, clo
         setIsLoggedIn(loggedInStatus);
     }, []);
 
+    const fetchProperties = async () => {
+        try {
+            const response = await axios.get(PROPERTIES_URL);
+            console.log('FastAPI /properties 응답:', response.data);
+            setProperties(response.data.properties);
+        } catch (error) {
+            console.error("Error fetching properties:", error);
+        }
+    };
+
     const sendMessage = async () => {
         if (!isLoggedIn) {
             alert('로그인이 필요합니다.');
             return;
         }
+        if (!input.trim()) return;
 
-        if (input.trim()) {
-            const userMessage = { role: 'user', content: input };
+        setIsLoading(true);
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('로그인 후 이용 가능합니다.');
+            setIsLoading(false);
+            return;
+        }
+
+        let userMessage;
+        try {
+            const userRes = await axios.post(
+                `${API_BASE_URL}chats/`,
+                {
+                    session_id: session.session_id || Date.now().toString(),
+                    message: input,
+                    message_type: 'user'
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    withCredentials: true,
+                }
+            );
+            userMessage = userRes.data;
             const updatedMessages = [...messages, userMessage];
             setMessages(updatedMessages);
-            setInput('');
-            handleResizeHeight();
-            setIsLoading(true);
-
             updateSession({ ...session, messages: updatedMessages });
+        } catch (error) {
+            console.error('Error saving user message:', error);
+            setIsLoading(false);
+            return;
+        }
 
-            try {
-                const response = await fetch('http://localhost:8001/real_estate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: input }),
-                });
-                // const data = await response.text();
-
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                if (!response.body) throw new Error('No response body');
-
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let botMessage = { role: 'assistant', content:'' };
-
-                setMessages(prev => [...prev, botMessage]);
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    const chunk = decoder.decode(value, { stream: true });
-                    botMessage.content += chunk;
-                    setMessages(prev => [...prev.slice(0, -1), botMessage]);
-                }
-                
-                
-                localStorage.setItem('chatMessages', JSON.stringify([...updatedMessages, botMessage]));
-                // const newMessages = [...updatedMessages, botMessage];
-                // setMessages(newMessages);
-                // updateSession({ ...session, messages: newMessages });
-            } catch (error) {
-                console.error('Error:', error);
-                const errorMessage = { role: 'assistant', content: '오류 발생. 다시 시도해주세요.' };
-                // const newMessages = [...updatedMessages, errorMessage];
-                setMessages(prev => [...prev, errorMessage]);
-                localStorage.setItem('chatMessages', JSON.stringify([...updatedMessages, errorMessage]));
-
-                // setMessages(newMessages);
-                // updateSession({ ...session, messages: newMessages });
-            } finally {
-                setIsLoading(false);
+        let botResponseText = "";
+        try {
+            const response = await fetch(FASTAPI_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: input }),
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.body) throw new Error('No response body');
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                botResponseText += decoder.decode(value, { stream: true });
             }
+        } catch (error) {
+            console.error('Error fetching assistant response:', error);
+            botResponseText = '오류 발생. 다시 시도해주세요.';
+        }
+
+        try {
+            const botRes = await axios.post(
+                `${API_BASE_URL}chats/`,
+                {
+                    session_id: session.session_id || userMessage.session_id,
+                    message: botResponseText,
+                    message_type: 'bot'
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    withCredentials: true,
+                }
+            );
+            const botMessage = botRes.data;
+            const finalMessages = [...messages, userMessage, botMessage];
+            setMessages(finalMessages);
+            updateSession({ ...session, messages: finalMessages });
+        } catch (error) {
+            console.error('Error saving assistant message:', error);
+            const errorMessage = {
+                role: 'assistant',
+                content: '오류 발생. 다시 시도해주세요.'
+            };
+            const finalMessages = [...messages, userMessage, errorMessage];
+            setMessages(finalMessages);
+            updateSession({ ...session, messages: finalMessages });
+        } finally {
+            setIsLoading(false);
+
+            fetchProperties();
         }
     };
 
@@ -89,10 +147,19 @@ const ChatWindow = ({ session = { messages: [] }, updateSession = () => { }, clo
         }
     };
 
-    const handleResizeHeight = () => {
-        textarea.current.style.height = 'auto';
-        textarea.current.style.height = textarea.current.scrollHeight + 'px';
+    const fetchPropertiesByIds = async (propertyIds) => {
+        try {
+            const response = await axios.get(`${PROPERTIES_URL}`, {
+                params: { property_ids: propertyIds.join(",") }
+            });
+            console.log('📍 FastAPI에서 가져온 매물:', response.data);
+            setProperties(response.data.properties);  // ✅ 부모 컴포넌트에서 Kakao 지도 업데이트
+        } catch (error) {
+            console.error("🚨 Error fetching properties:", error);
+        }
     };
+
+
 
     return (
         <div className="chat-window">
@@ -100,12 +167,17 @@ const ChatWindow = ({ session = { messages: [] }, updateSession = () => { }, clo
                 <button className="notice-closebtn" onClick={closeChatWindow}>
                     &times;
                 </button>
-                {messages.map((msg, index) => (
-                    <div key={index} className={`chat-window-message ${msg.role}`}>
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
-                    </div>
-                ))}
-                {isLoading && <div className="chat-window-message loading">로딩 중...</div>}
+                {messages.map((msg, index) => {
+                    const role = msg.message_type === 'user' ? 'user' : 'assistant';
+                    return (
+                        <div key={index} className={`chat-window-message ${role}`}>
+                            <ReactMarkdown>{msg.message || msg.content}</ReactMarkdown>
+                        </div>
+                    );
+                })}
+                {isLoading && (
+                    <div className="chat-window-message loading">로딩 중...</div>
+                )}
                 <div ref={messagesEndRef} />
             </div>
 
@@ -119,7 +191,7 @@ const ChatWindow = ({ session = { messages: [] }, updateSession = () => { }, clo
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             placeholder="메시지를 입력하세요."
-                            onKeyUp={handleKeyDown}
+                            onKeyDown={handleKeyDown}
                             rows={1}
                         />
                         <button onClick={sendMessage} disabled={isLoading}>
@@ -130,6 +202,6 @@ const ChatWindow = ({ session = { messages: [] }, updateSession = () => { }, clo
             </div>
         </div>
     );
-};
+}
 
 export default ChatWindow;

@@ -8,7 +8,7 @@ import Feedback from './Feedback';
 import Favorite from './Favorite';
 import ChatLog from './ChatLog';
 
-const Sidebar = ({ isOpen, toggleSidebar }) => {
+const Sidebar = ({ isOpen, toggleSidebar, setProperties }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [isNoticeOpen, setIsNoticeOpen] = useState(false);
@@ -166,7 +166,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       <Userguide isOpen={isGuideOpen} closeModal={closeGuide} />
       <Feedback isOpen={isFeedbackOpen} closeModal={closeFeedback} />
       <Favorite isOpen={isFavoriteOpen} closeModal={closeFavorite} />
-      {isChatLogOpen && <ChatLog isOpen={isChatLogOpen} closeModal={closeChatLog} />}
+      {isChatLogOpen && <ChatLog isOpen={isChatLogOpen} closeModal={closeChatLog} setProperties={setProperties} />}
     </>
   );
 };

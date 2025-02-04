@@ -116,7 +116,10 @@ const RegisterForm = ({ isOpen, closeModal }) => {
                 {isTermsOpen && (
                     <div className="terms-content">
                         고객님께서는 본 서비스를 이용함에 있어 다음의 이용 약관을 준수해야 합니다.
-                        (약관 내용...)
+                        본 서비스는 개인 및 기업 사용자를 위한 서비스입니다.
+                        이용자는 허위 정보 제공, 타인의 계정 도용, 불법적인 목적의 사용을 금지합니다.
+                        당사는 서비스 운영 및 개선을 위해 필요 시 서비스 내용을 변경하거나 중단할 수 있습니다.
+                        기타 법적 책임은 대한민국 법률을 따릅니다.
                     </div>
                 )}
 
@@ -132,32 +135,36 @@ const RegisterForm = ({ isOpen, closeModal }) => {
                 </div>
                 {isPrivacyOpen && (
                     <div className="terms-content">
-                        (개인정보 처리방침 내용...)
+                        서집사는 회원가입 및 서비스 제공을 위해 다음과 같은 개인정보를 수집 및 이용합니다.
+                        수집 항목: 이메일, 닉네임, 성별, 나이
+                        수집 목적: 회원 식별, 서비스 제공, 고객 지원
+                        보유 기간: 회원 탈퇴 후 30일까지 보관 후 삭제
+                        개인정보 처리방침에 대한 자세한 내용은 개인정보 처리방침에서 확인할 수 있습니다.
                     </div>
                 )}
             </div>
 
             {/* 가입 폼 */}
             <div className="register-group">
-                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} required />
+                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} maxLength={15} required />
                 <label>아이디</label>
                 {errors.username && <p className="error-message">{errors.username}</p>}
             </div>
 
             <div className="register-group">
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} maxLength={15} required />
                 <label>비밀번호</label>
                 {errors.password && <p className="error-message">{errors.password}</p>}
             </div>
 
             <div className="register-group">
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={15} required />
                 <label>이메일</label>
                 {errors.email && <p className="error-message">{errors.email}</p>}
             </div>
 
             <div className="register-group">
-                <input type="text" id="nickname" placeholder=" " value={nickname} onChange={(e) => setNickname(e.target.value)} required />
+                <input type="text" id="nickname" placeholder=" " value={nickname} onChange={(e) => setNickname(e.target.value)} maxLength={15} required />
                 <label htmlFor="nickname">닉네임</label>
             </div>
 
@@ -172,7 +179,7 @@ const RegisterForm = ({ isOpen, closeModal }) => {
             </div>
 
             <div className="register-group">
-                <input type="number" id="age" placeholder=" " value={age} onChange={(e) => setAge(e.target.value)} required />
+                <input type="number" id="age" placeholder=" " value={age} onChange={(e) => setAge(e.target.value)} min={1} max={100} required />
                 <label htmlFor="age">나이</label>
             </div>
 

@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework import viewsets, status, permissions, filters
 from rest_framework.response import Response
 from rest_framework.decorators import action, permission_classes
@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from django.contrib.auth import login
+from django.db.models import Count, Max
 from rest_framework.views import APIView
 from .models import (
     Address, CulturalFacility, CulturalFestival, PropertyLocation, PropertyInfo, 
@@ -61,31 +62,14 @@ class PropertyLocationViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         except PropertyLocation.DoesNotExist:
             return Response({"error": "Property not found"}, status=status.HTTP_404_NOT_FOUND)
-
 class PropertyInfoViewSet(viewsets.ModelViewSet):
     queryset = PropertyInfo.objects.all()
     serializer_class = PropertyInfoSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['property_type', 'property_subtype', 'is_active', 'property_id']
 
-    @action(detail=False, methods=['get'])
-    def active_properties(self, request):
-        active_properties = self.queryset.filter(is_active=True)
-        serializer = self.get_serializer(active_properties, many=True)
-        return Response(serializer.data)
-
-    @action(detail=False, methods=['get'])
-    def by_property_id(self, request):
-        property_id = request.query_params.get('property_id')
-        if not property_id:
-            return Response({"error": "property_id parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            property_info = self.queryset.get(property_id=property_id)
-            serializer = self.get_serializer(property_info)
-            return Response(serializer.data)
-        except PropertyInfo.DoesNotExist:
-            return Response({"error": "Property not found"}, status=status.HTTP_404_NOT_FOUND)
+    def retrieve(self, request, pk=None):
+        property_info = get_object_or_404(PropertyInfo, property_id=pk)
+        serializer = self.get_serializer(property_info)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class RentalViewSet(viewsets.ModelViewSet):
     queryset = Rental.objects.all()
@@ -171,43 +155,41 @@ class UserViewSet(viewsets.ModelViewSet):
 class ChatViewSet(viewsets.ModelViewSet):
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
-    permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend]
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]  # django_filters를 사용 중이라면
     filterset_fields = ['session_id']
 
     def get_queryset(self):
-        # 사용자는 자신의 채팅만 볼 수 있음
+        # 로그인한 사용자의 채팅 메시지만 조회 (시간순 정렬)
         return Chat.objects.filter(user=self.request.user).order_by('created_at')
 
     def perform_create(self, serializer):
-        # 세션 ID가 없으면 새로 생성
+        # 요청 데이터에 session_id가 없으면 새로 생성
         session_id = self.request.data.get('session_id', f'session_{timezone.now().timestamp()}')
         serializer.save(user=self.request.user, session_id=session_id)
 
     @action(detail=False, methods=['get'])
     def sessions(self, request):
-        # 사용자의 채팅 세션 목록 조회
+        # 로그인한 사용자의 각 session_id별 메시지 집계 (세션 목록)
         sessions = Chat.objects.filter(user=request.user)\
             .values('session_id')\
             .annotate(
-                message_count=models.Count('id'),
-                last_message=models.Max('created_at')
+                message_count=Count('id'),
+                last_message=Max('created_at')
             )\
             .order_by('-last_message')
-        
         return Response(sessions)
 
     @action(detail=False, methods=['get'])
     def session_messages(self, request):
-        # 특정 세션의 메시지 목록 조회
+        # 특정 session_id에 해당하는 모든 메시지 조회
         session_id = request.query_params.get('session_id')
         if not session_id:
             return Response({"error": "session_id is required"}, status=status.HTTP_400_BAD_REQUEST)
-        
         messages = self.get_queryset().filter(session_id=session_id)
         serializer = self.get_serializer(messages, many=True)
         return Response(serializer.data)
-
+    
 class FeedbackViewSet(viewsets.ModelViewSet):
     queryset = Feedback.objects.all()
     serializer_class = FeedbackSerializer

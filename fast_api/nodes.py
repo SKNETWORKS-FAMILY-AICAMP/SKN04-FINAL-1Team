@@ -10,6 +10,7 @@ from chroma_db import model, collection, initialize_vector_db
 import json
 import os
 import yaml
+import re
 
 with open(os.path.abspath('./prompts.yaml'), 'r', encoding='utf-8') as file:
     prompts = yaml.safe_load(file)
@@ -319,36 +320,46 @@ def clean_response(state: RealEstateState) -> RealEstateState:
 
     clean_results = state['clean_results']
 
+    # ```json ``` 제거
     if clean_results.startswith("```json") and clean_results.endswith("```"):
         clean_results = clean_results[7:-3].strip()
 
-    if clean_results.strip().endswith(";"):
-        clean_results = clean_results[:-1].strip()
+    # None, NaN, Infinity 변환
+    clean_results = clean_results.replace("None", "null").replace("NaN", "0").replace("Infinity", "0")
+
+    # 역슬래시 제거
+    clean_results = re.sub(r'\\(?!["\\/bfnrtu])', '', clean_results)
+
+    # 키-값 자동 수정 (": "가 없는 경우)
+    clean_results = re.sub(r"(\w+):", r'"\1":', clean_results)
+
+    print(f"💡 JSON 데이터 확인:\n{clean_results}")
 
     try:
         data_list = json.loads(clean_results)
+
         if not isinstance(data_list, list):
+            print(f"❌ JSON 데이터가 리스트가 아님: {type(data_list)}")
             raise ValueError("JSON 데이터가 리스트가 아닙니다.")
 
-        # ✅ 최신 properties 데이터를 전역 변수에 저장
         latest_properties.clear()
         latest_properties.extend([
             {
-                "property_id": item["property_id"],
-                "latitude": item["latitude"],
-                "longitude": item["longitude"]
+                "property_id": item.get("property_id"),
+                "latitude": item.get("latitude"),
+                "longitude": item.get("longitude")
             }
             for item in data_list
         ])
 
-        print(f"Updated properties: {latest_properties}")
+        print(f"✅ Updated properties: {latest_properties}")
 
         return {"properties": latest_properties}
 
-    except json.JSONDecodeError:
-        print("JSON 파싱 오류 발생.")
-    except (IndexError, KeyError, ValueError) as e:
-        print(f"데이터 처리 중 오류 발생: {e}")
+    except json.JSONDecodeError as e:
+        print(f"🚨 JSON 파싱 오류 발생: {e}")
+        print(f"💡 JSON 데이터 확인:\n{clean_results}")
+        return {"properties": []}  # 오류 발생 시 빈 리스트 반환
 
 def generate_response(state: RealEstateState)-> RealEstateState:
     print('[generate_response] 답변 생성중입니다...')
