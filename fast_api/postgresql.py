@@ -23,15 +23,23 @@ def create_postgresql_engine():
     """
     try:
         DATABASE_URL = f"postgresql+psycopg2://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
-        print(f"🔹 DATABASE_URL: {DATABASE_URL}")  # 추가해서 값 확인!
+        print(f"🔹 DATABASE_URL: {DATABASE_URL}")
 
-        engine = create_engine(DATABASE_URL, poolclass=NullPool)  # ✅ 연결 풀링 비활성화
-        print("✅ PostgreSQL 데이터베이스 연결 성공!")
+        engine = create_engine(
+            DATABASE_URL, 
+            poolclass=NullPool,
+            connect_args={
+                "connect_timeout": 5  # 연결 타임아웃 설정 (초)
+            }
+        )
+        
+        # 연결 테스트
         with engine.connect() as connection:
             result = connection.execute(text("SELECT 1"))
             print(f"✅ DB 연결 테스트 성공! 결과: {result.fetchall()}")
             
         return engine
+
     except SQLAlchemyError as e:
         print(f"❌ 데이터베이스 연결 중 오류 발생: {str(e)}")
         return None

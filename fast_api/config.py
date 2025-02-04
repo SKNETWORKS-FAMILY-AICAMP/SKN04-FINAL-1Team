@@ -14,7 +14,7 @@ load_dotenv()
 DB_CONFIG = {
     "user": os.getenv("POSTGRES_USER", "realestate"),       # 기본값: "postgres"
     "password": os.getenv("POSTGRES_PASSWORD", "realestate"),   # 기본값: "1234"
-    "host": os.getenv("POSTGRES_HOST", "postgres-data"),      # 기본값: "localhost"
+    "host": os.getenv("POSTGRES_HOST", "airflow-docker-postgres-data-1"),      # 기본값: "localhost"
     "port": os.getenv("POSTGRES_PORT", "5432"),           # 기본값: "5432"
     "database": os.getenv("POSTGRES_DB", "realestate") # 기본값: "real_estate"
 }

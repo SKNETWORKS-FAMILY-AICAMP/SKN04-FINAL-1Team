@@ -117,7 +117,8 @@ class User(AbstractUser):
         unique=True,
         null=True,
         blank=True,
-        help_text='사용자의 닉네임'
+        help_text='사용자의 닉네임',
+        default=None
     )
     profile_image = models.CharField(max_length=200, null=True)
     gender = models.CharField(max_length=1, choices=[('M', '남성'), ('F', '여성'), ('O', '기타')], null=True)
