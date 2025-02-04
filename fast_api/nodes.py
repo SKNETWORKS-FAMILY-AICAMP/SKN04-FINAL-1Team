@@ -25,6 +25,7 @@ class RealEstateState(TypedDict): # 그래프의 상태를 정의하는 클래�
     query_answer:Annotated[str, 'answer다듬기']
     answers: Annotated[List[str], "최종 답변 결과"]
     clean_results: Annotated[List[Dict], "결과 정제"]
+    properties: Annotated[List[Dict], "부동산 정보"]
 
 def filter_node(state:RealEstateState) -> RealEstateState:
     print("[Filter Node] AI가 질문을 식별중입니다!!!!")
@@ -311,6 +312,45 @@ def clean_result_query(state: RealEstateState) -> RealEstateState:
 
     return {"clean_results":output}
 
+# ✅ 전역 변수로 최신 properties 저장
+latest_properties = []
+
+def clean_response(state: RealEstateState) -> RealEstateState:
+    global latest_properties
+    print('[clean_response]: 쿼리문을 다듬는 중 입니다.')
+
+    clean_results = state['clean_results']
+
+    if clean_results.startswith("```json") and clean_results.endswith("```"):
+        clean_results = clean_results[7:-3].strip()
+
+    if clean_results.strip().endswith(";"):
+        clean_results = clean_results[:-1].strip()
+
+    try:
+        data_list = json.loads(clean_results)
+        if not isinstance(data_list, list):
+            raise ValueError("JSON 데이터가 리스트가 아닙니다.")
+
+        # ✅ 최신 properties 데이터를 전역 변수에 저장
+        latest_properties.clear()
+        latest_properties.extend([
+            {
+                "property_id": item["property_id"],
+                "latitude": item["latitude"],
+                "longitude": item["longitude"]
+            }
+            for item in data_list
+        ])
+
+        print(f"Updated properties: {latest_properties}")
+
+        return {"properties": latest_properties}
+
+    except json.JSONDecodeError:
+        print("JSON 파싱 오류 발생.")
+    except (IndexError, KeyError, ValueError) as e:
+        print(f"데이터 처리 중 오류 발생: {e}")
 
 def generate_response(state: RealEstateState)-> RealEstateState:
     print('[generate_response] 답변 생성중입니다...')
