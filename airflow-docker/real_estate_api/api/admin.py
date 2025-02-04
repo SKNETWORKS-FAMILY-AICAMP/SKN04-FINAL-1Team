@@ -5,16 +5,17 @@ from .models import (
     Rental, Sale, Chat, Feedback, Notice, UserLog, Favorite,
     CrimeStats, Subway, LocationDistance
 )
+from .forms import CustomUserCreationForm
 
 class CustomUserAdmin(UserAdmin):
-    list_display = ('username', 'nickname', 'email', 'gender', 'age', 'is_staff', 'last_login_at', 'created_at')
-    search_fields = ('username', 'nickname', 'email')
-    ordering = ('-created_at',)
-    list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups', 'gender')
-    fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        ('개인정보', {'fields': ('nickname', 'email', 'profile_image', 'gender', 'age')}),
-        ('권한', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+    add_form = CustomUserCreationForm
+    model = User
+    list_display = ('username', 'email', 'nickname', 'is_staff', 'is_active',)
+    fieldsets = UserAdmin.fieldsets + (
+        (None, {'fields': ('nickname',)}),
+    )
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        (None, {'fields': ('nickname',)}),
     )
 
 @admin.register(Address)

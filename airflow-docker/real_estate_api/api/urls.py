@@ -10,16 +10,24 @@ from .views import (
     FavoriteViewSet, CrimeStatsViewSet, SubwayViewSet,
     LocationDistanceViewSet, UserRegistrationView
 )
+from rest_framework_simplejwt.views import TokenRefreshView
+from .auth_views import LoginView, RegisterView
 
-# Swagger 문서 설정
+# Swagger 문서 설정 수정
 schema_view = get_schema_view(
     openapi.Info(
         title="부동산 정보 API",
         default_version='v1.0',
         description="""
-# 부동산 정보 API 문서
+# API 사용 방법
 
-이 API는 부동산 정보를 제공하는 RESTful 서비스입니다.
+## 인증
+1. 회원가입: POST /api/auth/register/
+2. 로그인: POST /api/auth/login/
+3. 토큰 갱신: POST /api/auth/refresh/
+
+## 인증 헤더
+모든 API 요청에 다음 헤더를 포함해야 합니다:
 
 ## 주요 기능
 
@@ -47,10 +55,6 @@ schema_view = get_schema_view(
 - 새로운 매물 알림
 - 가격 변동 알림
 - 관심 지역 알림
-
-## 인증
-대부분의 API는 JWT 토큰 인증이 필요합니다.
-헤더에 `Authorization: Bearer <token>` 형식으로 토큰을 포함해야 합니다.
 
 ## 에러 처리
 - 400: 잘못된 요청
@@ -86,7 +90,6 @@ router.register(r'location-distances', LocationDistanceViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('register/', UserRegistrationView.as_view(), name='user-register'),
     path('auth/', include('rest_framework.urls')),
     path('chats/sessions/', ChatViewSet.as_view({'get': 'sessions'}), name='chat-sessions'),
     path('chats/session-messages/', ChatViewSet.as_view({'get': 'session_messages'}), name='chat-session-messages'),
@@ -97,4 +100,9 @@ urlpatterns = [
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    
+    # 인증 관련 URL
+    path('auth/login/', LoginView.as_view(), name='login'),
+    path('auth/register/', RegisterView.as_view(), name='register'),
+    path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ] 

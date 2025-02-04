@@ -112,7 +112,13 @@ class Sale(models.Model):
         managed = True
 
 class User(AbstractUser):
-    nickname = models.CharField(max_length=50, unique=True)
+    nickname = models.CharField(
+        max_length=150,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text='사용자의 닉네임'
+    )
     profile_image = models.CharField(max_length=200, null=True)
     gender = models.CharField(max_length=1, choices=[('M', '남성'), ('F', '여성'), ('O', '기타')], null=True)
     age = models.IntegerField(null=True)

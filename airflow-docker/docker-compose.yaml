@@ -169,6 +169,12 @@ services:
     restart: always
     networks:
       - common-network
+    command: >
+      bash -c "
+      pip install djangorestframework-simplejwt==5.3.1 &&
+      python manage.py migrate &&
+      python manage.py runserver 0.0.0.0:8000
+      "
 
   tor:
     image: dperson/torproxy

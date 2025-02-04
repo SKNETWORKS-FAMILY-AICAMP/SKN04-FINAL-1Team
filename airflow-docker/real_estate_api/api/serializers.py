@@ -115,14 +115,40 @@ class UserSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 class UserLoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField(write_only=True)
+    username = serializers.CharField(
+        label='사용자명',
+        help_text='로그인에 사용할 사용자명을 입력하세요.'
+    )
+    password = serializers.CharField(
+        label='비밀번호',
+        style={'input_type': 'password'},
+        write_only=True
+    )
 
     def validate(self, data):
-        user = authenticate(**data)
-        if user and user.is_active:
-            return user
-        raise serializers.ValidationError("Incorrect Credentials")
+        username = data.get('username')
+        password = data.get('password')
+
+        if not username or not password:
+            raise serializers.ValidationError('사용자명과 비밀번호를 모두 입력해주세요.')
+
+        user = authenticate(username=username, password=password)
+        
+        if not user:
+            raise serializers.ValidationError('잘못된 사용자명이나 비밀번호입니다.')
+
+        data['user'] = user
+        return data
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username', 'password', 'email', 'nickname', 'gender', 'age', 'profile_image')
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'email': {'required': True},
+            'nickname': {'required': True}
+        }
 
 class ChatSerializer(serializers.ModelSerializer):
     ai_response = serializers.CharField(read_only=True)

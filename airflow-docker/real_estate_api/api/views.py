@@ -18,7 +18,7 @@ from .serializers import (
     UserSerializer, UserLoginSerializer, ChatSerializer, FeedbackSerializer,
     NoticeSerializer, UserLogSerializer, FavoriteSerializer,
     CrimeStatsSerializer, SubwaySerializer, LocationDistanceSerializer,
-    AddressDetailSerializer
+    AddressDetailSerializer, UserRegistrationSerializer
 )
 from django.db import models
 
@@ -167,25 +167,6 @@ class UserViewSet(viewsets.ModelViewSet):
         if not self.request.user.is_staff:
             return User.objects.filter(id=self.request.user.id)
         return User.objects.all()
-
-    @action(detail=False, methods=['post'])
-    def login(self, request):
-        serializer = UserLoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.validated_data
-            login(request, user)
-            user.last_login_at = timezone.now()
-            user.save()
-            return Response(UserSerializer(user).data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=False, methods=['post'])
-    def register(self, request):
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ChatViewSet(viewsets.ModelViewSet):
     queryset = Chat.objects.all()
