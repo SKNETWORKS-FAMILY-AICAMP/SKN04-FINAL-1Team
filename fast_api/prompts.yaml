@@ -142,7 +142,7 @@ base_prompt : |
 
   ### 영어 키워드
   - 'facilities'에 관련된 Query는 영어로 작성해야한다.
-    ex) 엘리베이터 -> WHERE pi.facilities LIKE '%ELEVATOR%', 에어컨 -> WHERE pi.facilities LIKE '%"cooling": "%'
+    ex) 엘리베이터 -> WHERE pi.facilities::text LIKE '%ELEVATOR%', 에어컨 -> WHERE pi.facilities::text LIKE '%"cooling": "%'
   - 주택 유형(아파트, 빌라, 오피스텔 등)에 관련된된 Query는 영어로 작성해야한다.
     ex) pi.property_type LIKE '%APARTMENT%' -> 아파트, pi.property_type LIKE '%COMMERCIAL%' -> 상가
 
@@ -198,8 +198,8 @@ base_prompt : |
   9. 매물들을 정렬할 때 우선순위는 위치(1순위), 가격(2순위) 순 입니다.
   10. 쿼리만 작성하고 추가 설명은 하지 마세요.
   11. facilities는 영어로 쳐야지 나옵니다.
-      - pi.facilities LIKE '%ELEVATOR%' -> 엘리베이터
-      - pi.facilities LIKE '%"cooling": "%' -> 에이컨, 에어콘
+      - pi.facilities::text LIKE '%ELEVATOR%' -> 엘리베이터
+      - pi.facilities::text LIKE '%"cooling": "%' -> 에이컨, 에어콘
   12. 매물번호도 함께 보여주세요 매물번호는 property_id입니다.
 
   13. 지하철역에 관한 정보는 addresses 테이블의 area_name 칼럼에 있습니다.
@@ -209,6 +209,7 @@ base_prompt : |
   15. property_type은 영어로 쳐야지 나옵니다.
       - pi.property_type LIKE '%APARTMENT%' -> 아파트
       - pi.property_type LIKE '%COMMERCIAL%' -> 상가
+  16. 개수 제한은 따로 언급이 없으면 limit 5로 하세요.
 
 
 rentals_prompt : |
@@ -232,7 +233,7 @@ rentals_prompt : |
   AND r.rental_type = '30051B2'
   AND r.deposit <= 20000000
   AND r.monthly_rent <= 700000
-  limit 10;
+  limit 5;
   '''
 
   ### 전세 예시 질문과 쿼리:
@@ -250,7 +251,7 @@ rentals_prompt : |
   AND r.deposit <= 1000000000
   AND a.area_name LIKE '%강남%'
   AND ld.distance <= 500
-  limit 10;
+  limit 5;
   '''
 
   사용자 질문: {user_query}
@@ -268,7 +269,7 @@ sales_prompt : |
   WHERE pl.sigungu LIKE '%강서구%'
   AND s.price <= 1000000000
   ORDER BY s.price desc
-  limit 10;
+  limit 5;
   '''
 
   - 질문: "강동역 역세권 아파트 15억 추천해줘"
@@ -285,7 +286,7 @@ sales_prompt : |
   AND a.area_name LIKE '%강동%'
   AND ld.distance <= 500
   ORDER BY s.price desc
-  limit 10;
+  limit 5;
   '''
 
   사용자 질문: {user_query}
