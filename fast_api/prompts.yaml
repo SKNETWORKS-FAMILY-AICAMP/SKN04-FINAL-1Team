@@ -211,14 +211,13 @@ base_prompt : |
       - pi.property_type LIKE '%COMMERCIAL%' -> 상가
   16. 개수 제한은 따로 언급이 없으면 limit 5로 하세요.
 
-
 rentals_prompt : |
-  16. rental_type 값은 다음과 같습니다:
+  17. rental_type 값은 다음과 같습니다:
       - 30051B1 : 전세
       - 30051B2 : 월세
       - 30051B3 : 단기임대
 
-  17. rentals 테이블에 price라는 컬럼이 없습니다. rentals 테이블에는 price 대신 deposit(보증금)과 monthly_rent(월세) 컬럼이 존재합니다.
+  18. rentals 테이블에 price라는 컬럼이 없습니다. rentals 테이블에는 price 대신 deposit(보증금)과 monthly_rent(월세) 컬럼이 존재합니다.
 
   ### 월세 예시 질문과 쿼리:
 
