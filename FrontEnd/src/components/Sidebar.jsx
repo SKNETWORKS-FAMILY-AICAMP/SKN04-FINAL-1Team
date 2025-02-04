@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import '../styles/Sidebar.css';
 import LoginModal from './LoginModal';
+import RegisterModal from './RegisterModal';
 import Notice from './Notice';
 import Userguide from './Userguide';
 import Feedback from './Feedback';
@@ -9,6 +10,7 @@ import ChatLog from './ChatLog';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [isNoticeOpen, setIsNoticeOpen] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -33,6 +35,15 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     setIsModalOpen(false);
   };
 
+  const openRegisterModal = () => {
+    closeAllModal();
+    setIsRegisterModalOpen(true);
+  };
+
+  const closeRegisterModal = () => {
+    setIsRegisterModalOpen(false);
+  };
+
   const closeNotice = () => {
     setIsNoticeOpen(false);
   };
@@ -47,6 +58,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   const closeFeedback = () => {
     setIsFeedbackOpen(false);
+  };
+  const closeChatLog = () => {
+    setIsChatLogOpen(false);
   };
 
   const toggleNotice = () => {
@@ -81,6 +95,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   const closeAllModal = () => {
     setIsModalOpen(false);
+    setIsRegisterModalOpen(false);
     setIsNoticeOpen(false);
     setIsGuideOpen(false);
     setIsFeedbackOpen(false);
@@ -126,9 +141,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           </button>
           <hr />
 
-          <button onClick={() => {
-            setIsChatLogOpen(!isChatLogOpen)
-          }}>
+          <button onClick={() => setIsChatLogOpen(!isChatLogOpen)}>
             <img className='icon-chatlog' src='/images/chatLog.png' alt="채팅로그" />
             <span>채팅로그</span>
           </button>
@@ -139,12 +152,21 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         {isOpen ? '<<' : '>>'}
       </button>
 
-      <LoginModal isOpen={isModalOpen} closeModal={closeModal} />
+      <LoginModal
+        isOpen={isModalOpen}
+        closeModal={closeModal}
+        openRegisterModal={openRegisterModal}
+        onLoginSuccess={() => setIsLoggedIn(true)}
+      />
+      <RegisterModal
+        isOpen={isRegisterModalOpen}
+        closeModal={closeRegisterModal}
+      />
       <Notice isOpen={isNoticeOpen} closeModal={closeNotice} />
       <Userguide isOpen={isGuideOpen} closeModal={closeGuide} />
       <Feedback isOpen={isFeedbackOpen} closeModal={closeFeedback} />
       <Favorite isOpen={isFavoriteOpen} closeModal={closeFavorite} />
-      {isChatLogOpen && <ChatLog />}
+      {isChatLogOpen && <ChatLog isOpen={isChatLogOpen} closeModal={closeChatLog} />}
     </>
   );
 };

@@ -2,12 +2,27 @@ import { useEffect } from "react";
 import '../styles/Notice.css';
 import { useState } from "react";
 import NoticeModal from "./NoticeModal";
+import { fetchNotices } from "../api";
 
 const Notice = ({ isOpen, closeModal }) => {
     if (!isOpen) return null;
 
     const [isOpenNoticeModal, setIsOpenNoticeModal] = useState('');
+    const [notices, setNotices] = useState([])
+    const [selectedNotice, setSelectedNotice] = useState(null)
 
+    useEffect(() => {
+        const getNotices = async () => {
+            try {
+                const data = await fetchNotices();
+                setNotices(data);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        getNotices();
+    }, []);
 
     const handleKeyDown = (e) => {
         if (e.key === 'Escape') {
@@ -26,13 +41,15 @@ const Notice = ({ isOpen, closeModal }) => {
         e.stopPropagation();
     };
 
-    const openNoticeModal = () => {
+    const openNoticeModal = (notice) => {
+        setSelectedNotice(notice);
         setIsOpenNoticeModal(true);
     };
-
     const closeNoticeModal = () => {
         setIsOpenNoticeModal(false);
+        setSelectedNotice(null);
     };
+
 
     return (
         <div className="notice-overlay" onClick={closeModal}>
@@ -44,21 +61,31 @@ const Notice = ({ isOpen, closeModal }) => {
                     </button>
                 </div>
                 <div className="notice-modal-body">
-                    <button className="notice-btn1" onClick={openNoticeModal}>
-                        <div className="notice-body-title">
-                            첫번째 공지사항 입니다.
-                        </div>
-                        <br />
-                        <div className="notice-body-date">
-                            2025.01.08
-                        </div>
-                        <div className="notice-body-text">
-                            첫번째 공지사항 내용입니다.
-                        </div>
-                    </button>
+                    {notices.length > 0 ? (
+                        notices.map((notice) => (
+                            <button
+                                key={notice.id}
+                                className="notice-btn1"
+                                onClick={() => openNoticeModal(notice)}
+                            >
+                                <div className="notice-body-title">
+                                    {notice.title || "공지사항 제목"}
+                                </div>
+                                <div className="notice-body-date">
+                                    {new Date(notice.created_at).toLocaleDateString() || "날짜"}
+                                </div>
+                                <br />
+                                <div className="notice-body-text">
+                                    {notice.content?.substring(0, 100) || "공지사항 내용"}
+                                </div>
+                            </button>
+                        ))
+                    ) : (
+                        <p>공지사항이 없습니다.</p>
+                    )}
                 </div>
             </div>
-            <NoticeModal isOpen={isOpenNoticeModal} onClose={closeNoticeModal} />
+            <NoticeModal isOpen={isOpenNoticeModal} onClose={closeNoticeModal} notice={selectedNotice} />
         </div>
     );
 };

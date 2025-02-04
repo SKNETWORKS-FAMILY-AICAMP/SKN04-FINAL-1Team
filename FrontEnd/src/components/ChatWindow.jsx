@@ -2,11 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import '../styles/ChatWindow.css';
 
-const ChatWindow = ({ session = { messages: [] }, updateSession = () => { } }) => {
+const ChatWindow = ({ session = { messages: [] }, updateSession = () => { }, closeChatWindow }) => {
     const [messages, setMessages] = useState(session.messages);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [isOpen, setIsOpen] = useState(true)
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const textarea = useRef();
     const messagesEndRef = useRef(null);
 
@@ -16,7 +16,17 @@ const ChatWindow = ({ session = { messages: [] }, updateSession = () => { } }) =
         }
     }, [messages]);
 
+    useEffect(() => {
+        const loggedInStatus = localStorage.getItem('isLoggedIn') === 'true';
+        setIsLoggedIn(loggedInStatus);
+    }, []);
+
     const sendMessage = async () => {
+        if (!isLoggedIn) {
+            alert('로그인이 필요합니다.');
+            return;
+        }
+
         if (input.trim()) {
             const userMessage = { role: 'user', content: input };
             const updatedMessages = [...messages, userMessage];
@@ -64,37 +74,41 @@ const ChatWindow = ({ session = { messages: [] }, updateSession = () => { } }) =
     };
 
     return (
-        isOpen && (
-            <div className="chat-window">
-                <div className="chat-window-messages">
-                    <button className="notice-closebtn" onClick={() => setIsOpen(false)}>
-                        &times;
-                    </button>
-                    {messages.map((msg, index) => (
-                        <div key={index} className={`chat-window-message ${msg.role}`}>
-                            <ReactMarkdown>{msg.content}</ReactMarkdown>
-                        </div>
-                    ))}
-                    {isLoading && <div className="chat-window-message loading">로딩 중...</div>}
-                    <div ref={messagesEndRef} />
-                </div>
-                <div className="chat-window-input">
-                    <textarea
-                        ref={textarea}
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="메시지를 입력하세요."
-                        onKeyUp={handleKeyDown}
-                        rows={1}
-                    />
-                    <button onClick={sendMessage} disabled={isLoading}>
-                        {isLoading ? '전송 중...' : '전송'}
-                    </button>
-                </div>
+        <div className="chat-window">
+            <div className="chat-window-messages">
+                <button className="notice-closebtn" onClick={closeChatWindow}>
+                    &times;
+                </button>
+                {messages.map((msg, index) => (
+                    <div key={index} className={`chat-window-message ${msg.role}`}>
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
+                ))}
+                {isLoading && <div className="chat-window-message loading">로딩 중...</div>}
+                <div ref={messagesEndRef} />
             </div>
-        )
-    );
 
+            <div className="chat-window-input">
+                {!isLoggedIn ? (
+                    <p className="chat-login-message">로그인 후 채팅을 이용할 수 있습니다.</p>
+                ) : (
+                    <>
+                        <textarea
+                            ref={textarea}
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="메시지를 입력하세요."
+                            onKeyUp={handleKeyDown}
+                            rows={1}
+                        />
+                        <button onClick={sendMessage} disabled={isLoading}>
+                            {isLoading ? '전송 중...' : '전송'}
+                        </button>
+                    </>
+                )}
+            </div>
+        </div>
+    );
 };
 
 export default ChatWindow;

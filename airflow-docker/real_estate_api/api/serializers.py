@@ -141,7 +141,7 @@ class UserLoginSerializer(serializers.Serializer):
         return data
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    class Meta:
+    class Meta(UserSerializer.Meta):
         model = User
         fields = ('username', 'password', 'email', 'nickname', 'gender', 'age', 'profile_image')
         extra_kwargs = {
@@ -184,7 +184,7 @@ class FeedbackSerializer(serializers.ModelSerializer):
     class Meta:
         model = Feedback
         fields = '__all__'
-        read_only_fields = ('created_at',)
+        read_only_fields = ('created_at', 'user')
 
 class NoticeSerializer(serializers.ModelSerializer):
     class Meta:

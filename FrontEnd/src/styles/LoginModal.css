@@ -16,7 +16,7 @@
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    max-width: 250px;
+    max-width: 260px;
     width: 90%;
     text-align: center;
     margin: auto;
@@ -48,6 +48,63 @@
 .sociallogin {
     display: flex;
     flex-direction: column;
+}
+
+.input-group {
+    position: relative;
+    width: 90%;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    padding-top: 20px;
+    font-size: 16px;
+    border: 0.5px solid #ccc;
+    outline: none;
+}
+
+.input-group #username {
+    border-radius: 10px 10px 0px 0px;
+}
+
+.input-group #password {
+    border-radius: 0px 0px 10px 10px;
+}
+
+.input-group input:focus {
+    border-color: red;
+}
+
+.input-group label {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: #aaa;
+    transition: all 0.3s ease-in-out;
+    pointer-events: none;
+}
+
+.input-group input:focus+label,
+.input-group.filled label {
+    top: 12px;
+    font-size: 12px;
+    color: #666;
+}
+
+.loginmodalbtn {
+    display: flex;
+    flex-direction: row;
     gap: 10px;
-    align-items: center;
+    justify-content: center;
+    color: black;
+}
+
+.loginmodalbtn>button {
+    border: none;
+    color: black;
+    border-radius: 10px;
+    font-size: 15px;
 }

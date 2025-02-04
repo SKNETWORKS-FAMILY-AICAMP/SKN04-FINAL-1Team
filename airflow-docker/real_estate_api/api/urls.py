@@ -90,19 +90,19 @@ router.register(r'location-distances', LocationDistanceViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+
+    path('auth/login/', LoginView.as_view(), name='login'),
+    path('auth/register/', RegisterView.as_view(), name='register'),
+    path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
     path('auth/', include('rest_framework.urls')),
+
+    path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+
     path('chats/sessions/', ChatViewSet.as_view({'get': 'sessions'}), name='chat-sessions'),
     path('chats/session-messages/', ChatViewSet.as_view({'get': 'session_messages'}), name='chat-session-messages'),
     path('favorites/my-favorites/', FavoriteViewSet.as_view({'get': 'my_favorites'}), name='my-favorites'),
     path('notices/<int:pk>/toggle-active/', NoticeViewSet.as_view({'patch': 'toggle_active'}), name='notice-toggle-active'),
-    
-    # API 문서 URL
-    path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    
-    # 인증 관련 URL
-    path('auth/login/', LoginView.as_view(), name='login'),
-    path('auth/register/', RegisterView.as_view(), name='register'),
-    path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ] 

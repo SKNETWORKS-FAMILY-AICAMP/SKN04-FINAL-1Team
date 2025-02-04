@@ -4,19 +4,6 @@ import '../styles/Userguide.css'
 const Userguide = ({ isOpen, closeModal }) => {
     if (!isOpen) return null;
 
-    const handleKeyDown = (e) => {
-        if (e.key === 'Escape') {
-            closeModal();
-        }
-    };
-
-    useEffect(() => {
-        document.addEventListener('keydown', handleKeyDown);
-        return () => {
-            document.removeEventListener('keydown', handleKeyDown);
-        };
-    }, []);
-
     const handleModalClick = (e) => {
         e.stopPropagation();
     };
@@ -35,7 +22,15 @@ const Userguide = ({ isOpen, closeModal }) => {
                         챗봇 이렇게 활용해보세요!
                     </div>
                     <div>
-                        내용 추가 예정
+                        로그인 후 채팅로그 클릭!
+                        <br />
+                        New Chat을 클릭하면 채팅창이 나와요!
+                        <br />
+                        <br />
+                        채팅을 이런식으로 입력해보세요.
+                        <br />
+                        <br />
+                        "신림역이랑 가까운 원룸중에서 에어컨이랑 엘리베이터 있는 월세 매물 추천해줄래?"
                     </div>
                 </div>
             </div>

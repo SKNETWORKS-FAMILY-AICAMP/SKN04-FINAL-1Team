@@ -6,11 +6,16 @@ const ChatLog = () => {
     const [chatSessions, setChatSessions] = useState([]);
     const [currentSessionId, setCurrentSessionId] = useState(null);
     const [isOpen, setIsOpen] = useState(true);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
     useEffect(() => {
         const storedChats = localStorage.getItem('chatSessions');
         if (storedChats) {
             setChatSessions(JSON.parse(storedChats));
         }
+
+        const loggedInStatus = localStorage.getItem('isLoggedIn') === 'true';
+        setIsLoggedIn(loggedInStatus);
     }, []);
 
     useEffect(() => {
@@ -18,16 +23,29 @@ const ChatLog = () => {
     }, [chatSessions]);
 
     const createNewChat = () => {
+        if (!isLoggedIn) {
+            alert('로그인이 필요합니다.');
+            return;
+        }
+
         const newSession = { id: Date.now(), messages: [] };
         setChatSessions(prevSessions => [newSession, ...prevSessions]);
         setCurrentSessionId(newSession.id);
     };
 
     const selectChat = (sessionId) => {
+        if (!isLoggedIn) {
+            alert('로그인이 필요합니다.');
+            return;
+        }
         setCurrentSessionId(sessionId);
     };
 
     const currentSession = chatSessions.find(session => session.id === currentSessionId) || { id: currentSessionId, messages: [] };
+
+    if (!isLoggedIn) {
+        return <p className="chat-login-message">로그인 후 이용 가능합니다.</p>;
+    }
 
     return (
         <>
@@ -72,6 +90,7 @@ const ChatLog = () => {
                                         )
                                     );
                                 }}
+                                closeChatWindow={() => setCurrentSessionId(null)}
                             />
                         )}
                     </div>
@@ -79,7 +98,6 @@ const ChatLog = () => {
             )}
         </>
     );
-
 };
 
 export default ChatLog;

@@ -40,44 +40,52 @@
 }
 
 .notice-modal-body {
-    max-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    max-height: 100vh;
     overflow-y: auto;
     border: none;
     border-color: #D3D3D3;
     border-radius: 10px;
-    display: flex;
-    flex-direction: column;
     gap: 10px;
 }
 
 .notice-btn1 {
-    border: 1px solid;
-    border-radius: 10px;
-    width: 100%;
-    cursor: pointer;
-    height: 150px;
-    font-size: 20px;
-    background-color: white;
     display: flex;
     flex-direction: column;
-}
-
-
-.notice-body-text {
-    font-size: 15px;
-    padding-top: 15px;
-}
-
-.notice-body-date {
-    font-size: 15px;
-    font-weight: 900;
-    padding-top: 8px;
-    text-align: end;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    border: 1px solid #ddd;
+    background-color: white;
+    cursor: pointer;
+    width: 100%;
+    min-height: 100px;
+    text-align: center;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .notice-body-title {
-    font-size: 20px;
-    font-weight: 900;
-    padding-bottom: 10px;
+    font-size: 18px;
+    font-weight: bold;
     text-align: center;
+    width: 100%;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.notice-body-date {
+    font-size: 14px;
+    text-align: right;
+    width: 100%;
+    padding-right: 10px;
+}
+
+.notice-body-text {
+    font-size: 16px;
+    text-align: center;
+    width: 100%;
+    white-space: normal;
+    word-break: break-word;
 }

@@ -1,0 +1,188 @@
+.registerform {
+    width: 100%;
+    max-width: 400px;
+    margin: 40px auto;
+    padding: 25px;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.register-group {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.register-group input {
+    width: 94%;
+    padding: 12px 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    outline: none;
+    background-color: #f9f9f9;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.register-group select {
+    width: 100%;
+    padding: 12px 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    outline: none;
+    background-color: #f9f9f9;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.register-group input:focus,
+.register-group select:focus {
+    border-color: #007bff;
+    background-color: #ffffff;
+}
+
+.register-group label {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: #888;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.register-group input:focus+label,
+.register-group input:not(:placeholder-shown)+label,
+.register-group select:focus+label,
+.register-group select:not(:placeholder-shown)+label {
+    top: 9px;
+    font-size: 12px;
+    color: #007bff;
+}
+
+.error-message {
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.register-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    border-bottom: 1px solid #ddd;
+    position: relative;
+}
+
+.register-header h2 {
+    flex-grow: 1;
+    text-align: center;
+}
+
+.register-closebtn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #555;
+}
+
+.register-closebtn:hover {
+    color: #000;
+}
+
+.terms-section {
+    margin-bottom: 20px;
+}
+
+.terms-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.checkbox-container input {
+    display: none;
+}
+
+.checkmark {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #007bff;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    position: relative;
+}
+
+.checkbox-container input:checked+.checkmark {
+    background-color: #007bff;
+}
+
+.checkbox-container input:checked+.checkmark::after {
+    content: "";
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.terms-toggle {
+    border: none;
+    background: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #007bff;
+}
+
+.terms-content {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+
+}
+
+.registersubmit:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.registersubmit {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    background: #ccc;
+    border: none;
+    border-radius: 6px;
+    cursor: not-allowed;
+    transition: background 0.3s ease, cursor 0.3s ease;
+}
+
+.registersubmit.active {
+    background: #007bff;
+    cursor: pointer;
+}
+
+.registersubmit.active:hover {
+    background: #0056b3;
+}

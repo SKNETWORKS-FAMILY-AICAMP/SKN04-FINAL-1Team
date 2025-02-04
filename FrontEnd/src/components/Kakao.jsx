@@ -1,10 +1,8 @@
 import '../styles/Kakao.css';
 import Sidebar from "./Sidebar";
-import ChatWindow from "./ChatWindow";
 import { useEffect, useState, useRef } from "react";
 import ErrorBoundary from './ErrorBoundary';
 import DetailModal from './DetailModal.jsx';
-import axios from 'axios';
 
 export default function Kakao() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -201,7 +199,6 @@ export default function Kakao() {
       {error && <div className="error-overlay">에러: {error.message}</div>}
 
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-      <ChatWindow isSidebarOpen={isSidebarOpen} />
       <ErrorBoundary />
 
       <DetailModal
