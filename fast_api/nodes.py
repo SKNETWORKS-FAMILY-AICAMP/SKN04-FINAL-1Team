@@ -70,11 +70,9 @@ def filter_node(state:RealEstateState) -> RealEstateState:
         # ✅ 직전 질문과 합쳤을 때 부동산 관련이면 유지
         if combined_real_estate_type != "Fail":
             real_estate_type = combined_real_estate_type 
+        return {"real_estate_type" : real_estate_type, "messages":messages}
 
-    return {"real_estate_type" : real_estate_type,
-            "messages":messages,
-            "re_question": False
-            }
+    return {"real_estate_type" : real_estate_type}
 
 def summarize_conversation(state: RealEstateState):
     summary = state.get("summary", "")

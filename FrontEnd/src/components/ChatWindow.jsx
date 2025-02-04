@@ -38,23 +38,44 @@ const ChatWindow = ({ session = { messages: [] }, updateSession = () => { }, clo
             updateSession({ ...session, messages: updatedMessages });
 
             try {
-                const response = await fetch('http://localhost:8000/real_estate', {
+                const response = await fetch('http://localhost:8001/real_estate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ query: input }),
                 });
-                const data = await response.json();
-                const botMessage = { role: 'assistant', content: data.messages };
+                // const data = await response.text();
 
-                const newMessages = [...updatedMessages, botMessage];
-                setMessages(newMessages);
-                updateSession({ ...session, messages: newMessages });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                if (!response.body) throw new Error('No response body');
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let botMessage = { role: 'assistant', content:'' };
+
+                setMessages(prev => [...prev, botMessage]);
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value, { stream: true });
+                    botMessage.content += chunk;
+                    setMessages(prev => [...prev.slice(0, -1), botMessage]);
+                }
+                
+                
+                localStorage.setItem('chatMessages', JSON.stringify([...updatedMessages, botMessage]));
+                // const newMessages = [...updatedMessages, botMessage];
+                // setMessages(newMessages);
+                // updateSession({ ...session, messages: newMessages });
             } catch (error) {
                 console.error('Error:', error);
                 const errorMessage = { role: 'assistant', content: '오류 발생. 다시 시도해주세요.' };
-                const newMessages = [...updatedMessages, errorMessage];
-                setMessages(newMessages);
-                updateSession({ ...session, messages: newMessages });
+                // const newMessages = [...updatedMessages, errorMessage];
+                setMessages(prev => [...prev, errorMessage]);
+                localStorage.setItem('chatMessages', JSON.stringify([...updatedMessages, errorMessage]));
+
+                // setMessages(newMessages);
+                // updateSession({ ...session, messages: newMessages });
             } finally {
                 setIsLoading(false);
             }
