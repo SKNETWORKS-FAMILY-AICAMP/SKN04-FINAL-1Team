@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import '../styles/RegisterForm.css';
-import { registerUser } from '../api'; // 회원가입 API 호출 함수
+import { registerUser } from '../api';
 
 const RegisterForm = ({ isOpen, closeModal }) => {
     const [username, setUsername] = useState('');
@@ -17,13 +17,11 @@ const RegisterForm = ({ isOpen, closeModal }) => {
         email: '',
     });
 
-    // 약관/개인정보 처리 관련 상태 (필요시)
     const [isTermsOpen, setIsTermsOpen] = useState(false);
     const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
     const [termsAgreed, setTermsAgreed] = useState(false);
     const [privacyAgreed, setPrivacyAgreed] = useState(false);
 
-    // 폼 유효성 검사 함수
     const validateForm = () => {
         let newErrors = {};
 
@@ -47,7 +45,6 @@ const RegisterForm = ({ isOpen, closeModal }) => {
         return Object.keys(newErrors).length === 0;
     };
 
-    // 폼 상태 변경에 따라 유효성 업데이트
     useEffect(() => {
         if (
             username.length >= 8 &&
@@ -65,12 +62,10 @@ const RegisterForm = ({ isOpen, closeModal }) => {
         }
     }, [username, password, email, nickname, gender, age, termsAgreed, privacyAgreed]);
 
-    // 회원가입 API 호출하는 핸들러
     const handleRegister = async (e) => {
-        e.preventDefault(); // 폼 기본 제출 이벤트 방지
+        e.preventDefault();
         if (!validateForm()) return;
 
-        // API에 보낼 회원가입 데이터 구성 (age는 숫자로 변환)
         const registrationData = {
             username,
             password,
@@ -81,7 +76,6 @@ const RegisterForm = ({ isOpen, closeModal }) => {
         };
 
         try {
-            // 회원가입 API 호출 (registerUser 함수는 백엔드의 '/api/auth/register/' 엔드포인트와 연동되어야 함)
             const response = await registerUser(registrationData);
             console.log('회원가입 성공:', response);
             alert('회원가입이 성공적으로 완료되었습니다.');
@@ -144,7 +138,6 @@ const RegisterForm = ({ isOpen, closeModal }) => {
                 )}
             </div>
 
-            {/* 가입 폼 */}
             <div className="register-group">
                 <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} maxLength={15} required />
                 <label>아이디</label>
@@ -158,7 +151,7 @@ const RegisterForm = ({ isOpen, closeModal }) => {
             </div>
 
             <div className="register-group">
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={15} required />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={30} required />
                 <label>이메일</label>
                 {errors.email && <p className="error-message">{errors.email}</p>}
             </div>

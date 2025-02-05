@@ -9,7 +9,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 필요한 도메인 추가
+    allow_origins=["http://127.0.0.1:3000", "http://localhost:3000"],  # 올바른 도메인 형식
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

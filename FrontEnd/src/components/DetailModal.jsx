@@ -1,67 +1,39 @@
 import '../styles/DetailModal.css';
-import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
-import Tooltip from './Tooltip';
-import { fetchPropertyInfoById, fetchPropertyLocationById } from '../api';
 
-const DetailModal = ({ isOpen, closeModal, propertyId }) => {
-    const [propertyDetail, setPropertyDetail] = useState(null);
-    const [locationDetail, setLocationDetail] = useState(null);
-
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    useEffect(() => {
-        if (!propertyId) return;
-
-        const getPropertyDetail = async () => {
-            try {
-                console.log(`Fetching property details for ID: ${propertyId}`);
-                const data = await fetchPropertyInfoById(propertyId);
-                setPropertyDetail(data);
-            } catch (error) {
-                console.error("Error fetching property detail:", error);
-                setError(error);
-            }
-        };
-
-        const getLocationDetail = async () => {
-            try {
-                console.log(`Fetching location details for ID: ${propertyId}`);
-                const data = await fetchPropertyLocationById(propertyId);
-                setLocationDetail(data);
-            } catch (error) {
-                console.error("Error fetching location detail:", error);
-                setError(error);
-            }
-        };
-
-        setLoading(true);
-        Promise.all([getPropertyDetail(), getLocationDetail()]).finally(() => setLoading(false));
-
-    }, [propertyId]);
-
-
-
+const DetailModal = ({ isOpen, closeModal, propertyDetail }) => {
     if (!isOpen || !propertyDetail) return null;
 
-    if (loading) return <div className="loading-overlay">로딩 중...</div>;
-    if (error) return <div className="error-overlay">에러: {error.message}</div>;
+    const {
+        building_name,
+        sido, sigungu, dong, jibun_main, jibun_sub,
+
+        room_count,
+        bathroom_count,
+        total_area,
+        exclusive_area,
+        monthly_rent,
+        description,
+    } = propertyDetail;
+
+    const address = [sido, sigungu, dong, jibun_main, jibun_sub]
+        .filter(Boolean)
+        .join(" ") || '정보 없음';
 
     const TableComponent = () => {
         const rows = [
+            { label: '주소', key: address },
+            { label: '방 개수', key: room_count },
+            { label: '욕실 개수', key: bathroom_count },
+            { label: '공급면적', key: total_area },
+            { label: '전용면적', key: exclusive_area },
             {
-                key: [locationDetail?.sido, locationDetail?.sigungu, locationDetail?.dong, locationDetail?.jibun_main, locationDetail?.jibun_sub]
-                    .filter(Boolean)
-                    .join(" ") || '정보 없음',
-                label: '주소'
+                label: '월세',
+                key: monthly_rent
+                    ? `${monthly_rent.toLocaleString()} 원`
+                    : '정보 없음'
             },
-            { key: propertyDetail.room_count, label: '방 개수' },
-            { key: propertyDetail.bathroom_count, label: '욕실 개수' },
-            { key: propertyDetail.total_area, label: '공급면적' },
-            { key: propertyDetail.exclusive_area, label: '전용면적' },
-            { key: propertyDetail.monthly_rent ? `${propertyDetail.monthly_rent.toLocaleString()} 원` : '정보 없음', label: '월세' },
         ];
 
         return (
@@ -87,10 +59,13 @@ const DetailModal = ({ isOpen, closeModal, propertyId }) => {
                         &times;
                     </button>
                 </div>
+
                 <hr className="hr" />
+
                 <div className="detail-content">
                     <TableComponent />
                     <br />
+
                     <table className="table-second">
                         <tbody>
                             <tr>
@@ -98,8 +73,8 @@ const DetailModal = ({ isOpen, closeModal, propertyId }) => {
                             </tr>
                             <tr>
                                 <td className="content-markdown">
-                                    <ReactMarkdown remarkPlugins={remarkBreaks}>
-                                        {propertyDetail.description || '설명 없음'}
+                                    <ReactMarkdown remarkPlugins={[remarkBreaks]}>
+                                        {description || '설명 없음'}
                                     </ReactMarkdown>
                                 </td>
                             </tr>

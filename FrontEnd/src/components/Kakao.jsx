@@ -6,7 +6,7 @@ import { fetchPropertyInfoById, fetchPropertyLocationById } from '../api';
 export default function Kakao({ properties }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedPropertyId, setSelectedPropertyId] = useState(null);
+
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [propertyDetail, setPropertyDetail] = useState(null);
 
@@ -66,11 +66,6 @@ export default function Kakao({ properties }) {
     loadKakaoMapScript();
   }, []);
 
-  useEffect(() => {
-    if (!kakaoMapRef.current || !properties || properties.length === 0) return;
-    drawMarkers(properties);
-  }, [properties]);
-
   const initializeMap = () => {
     const center = new window.kakao.maps.LatLng(37.5665, 126.9780);
     const options = { center, level: 5 };
@@ -79,14 +74,14 @@ export default function Kakao({ properties }) {
     kakaoMapRef.current = map;
   };
 
+  useEffect(() => {
+    if (!kakaoMapRef.current || !properties || properties.length === 0) return;
+    drawMarkers(properties);
+  }, [properties]);
+
   const drawMarkers = (markersData) => {
     markersRef.current.forEach((marker) => marker.setMap(null));
     markersRef.current = [];
-
-    if (!markersData || markersData.length === 0) {
-      console.log("매물 데이터가 없어 마커를 표시하지 않습니다.");
-      return;
-    }
 
     const map = kakaoMapRef.current;
     let openInfoWindow = null;
@@ -110,10 +105,13 @@ export default function Kakao({ properties }) {
           const data = await fetchPropertyInfoById(property_id);
           const data1 = await fetchPropertyLocationById(property_id);
 
-          const mergedPropertyDetail = { ...data, ...data1 }; // 🔥 두 개의 데이터를 하나로 합침
+          const mergedPropertyDetail = { ...data, ...data1 };
+          console.log("🏡 Merged Property Detail:", mergedPropertyDetail);
+
           setPropertyDetail(mergedPropertyDetail);
 
           const buildingName = data?.building_name || "이름 없음";
+          const prid = property_id
           const fullAddress = [
             data1?.sido,
             data1?.sigungu || data?.sigungu,
@@ -121,10 +119,8 @@ export default function Kakao({ properties }) {
             data1?.jibun_main || data?.jibun_main,
             data1?.jibun_sub || data?.jibun_sub
           ]
-            .filter(Boolean) // `null` 또는 `undefined` 값 제거
+            .filter(Boolean)
             .join(" ") || "주소 정보 없음";
-
-          console.log(`📍 건물명: ${buildingName}, 주소: ${fullAddress}`); // 📌 확인 로그 추가
 
           const content = document.createElement("div");
           content.className = "wrap";
@@ -133,8 +129,12 @@ export default function Kakao({ properties }) {
               <div class="title">${buildingName}</div>
               <div class="body">
                 <div class="desc">
+                  <div class="ellipsis">매물 번호 : ${prid}</div>
                   <div class="ellipsis">${fullAddress}</div>
-                  <div class="ellipsis">월세: ${markerInfo.monthly_rent ? markerInfo.monthly_rent.toLocaleString() + '원' : '정보 없음'}</div>
+                  <div class="ellipsis">월세: ${markerInfo.monthly_rent
+              ? markerInfo.monthly_rent.toLocaleString() + '원'
+              : '정보 없음'
+            }</div>
                 </div>
               </div>
             </div>
@@ -144,12 +144,12 @@ export default function Kakao({ properties }) {
           detailButton.innerText = "상세정보 보기";
           detailButton.className = "detail-btn";
           detailButton.onclick = () => {
-            setSelectedPropertyId(property_id);
             setIsDetailModalOpen(true);
           };
 
           content.querySelector(".desc").appendChild(detailButton);
           infowindow.setContent(content);
+
         } catch (error) {
           console.error("매물 정보 가져오는 중 오류:", error);
           infowindow.setContent(`<div>매물 정보를 불러올 수 없습니다.</div>`);
@@ -170,11 +170,12 @@ export default function Kakao({ properties }) {
         {loading && <div className="loading-overlay">로딩 중...</div>}
         {error && <div className="error-overlay">에러: {error?.message}</div>}
       </div>
+
       {isDetailModalOpen && propertyDetail && (
         <DetailModal
           isOpen={isDetailModalOpen}
           closeModal={() => setIsDetailModalOpen(false)}
-          propertyDetail={propertyDetail} // 🔥 propertyId 대신 mergedPropertyDetail 넘김
+          propertyDetail={propertyDetail}
         />
       )}
     </>

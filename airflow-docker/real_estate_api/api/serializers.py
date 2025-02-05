@@ -140,10 +140,11 @@ class UserLoginSerializer(serializers.Serializer):
         data['user'] = user
         return data
 
-class UserRegistrationSerializer(serializers.ModelSerializer):
+class UserRegistrationSerializer(UserSerializer):
     class Meta(UserSerializer.Meta):
-        model = User
-        fields = ('username', 'password', 'email', 'nickname', 'gender', 'age', 'profile_image')
+        # UserSerializer.Meta에 정의된 필드, extra_kwargs를 그대로 쓰되
+        # 혹은 수정/추가가 필요하면 작성
+        fields = ('id', 'username', 'password', 'email', 'nickname', 'gender', 'age', 'profile_image')
         extra_kwargs = {
             'password': {'write_only': True},
             'email': {'required': True},

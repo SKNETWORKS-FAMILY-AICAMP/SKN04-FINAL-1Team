@@ -5,7 +5,6 @@ import RegisterModal from './RegisterModal';
 import Notice from './Notice';
 import Userguide from './Userguide';
 import Feedback from './Feedback';
-import Favorite from './Favorite';
 import ChatLog from './ChatLog';
 
 const Sidebar = ({ isOpen, toggleSidebar, setProperties }) => {
@@ -14,7 +13,6 @@ const Sidebar = ({ isOpen, toggleSidebar, setProperties }) => {
   const [isNoticeOpen, setIsNoticeOpen] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-  const [isFavoriteOpen, setIsFavoriteOpen] = useState(false);
   const [isChatLogOpen, setIsChatLogOpen] = useState(false);
 
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -52,9 +50,6 @@ const Sidebar = ({ isOpen, toggleSidebar, setProperties }) => {
     setIsGuideOpen(false);
   };
 
-  const closeFavorite = () => {
-    setIsFavoriteOpen(false);
-  };
 
   const closeFeedback = () => {
     setIsFeedbackOpen(false);
@@ -78,10 +73,6 @@ const Sidebar = ({ isOpen, toggleSidebar, setProperties }) => {
     setIsFeedbackOpen(!isFeedbackOpen);
   };
 
-  const toggleFavorite = () => {
-    closeAllModal();
-    setIsFavoriteOpen(!isFavoriteOpen);
-  };
 
   const handleLogOut = () => {
     localStorage.removeItem('isLoggedIn');
@@ -99,7 +90,6 @@ const Sidebar = ({ isOpen, toggleSidebar, setProperties }) => {
     setIsNoticeOpen(false);
     setIsGuideOpen(false);
     setIsFeedbackOpen(false);
-    setIsFavoriteOpen(false);
     setIsChatLogOpen(false);
     localStorage.setItem('isChatOpen', 'false');
   };
@@ -135,10 +125,7 @@ const Sidebar = ({ isOpen, toggleSidebar, setProperties }) => {
             <img className='icon-feedback' src='/images/feedback.png' alt="피드백" />
             <span>피드백</span>
           </button>
-          <button onClick={toggleFavorite}>
-            <img className='icon-favorite' src='/images/favorite.png' alt="즐겨찾기" />
-            <span>즐겨찾기</span>
-          </button>
+
           <hr />
 
           <button onClick={() => setIsChatLogOpen(!isChatLogOpen)}>
@@ -165,7 +152,6 @@ const Sidebar = ({ isOpen, toggleSidebar, setProperties }) => {
       <Notice isOpen={isNoticeOpen} closeModal={closeNotice} />
       <Userguide isOpen={isGuideOpen} closeModal={closeGuide} />
       <Feedback isOpen={isFeedbackOpen} closeModal={closeFeedback} />
-      <Favorite isOpen={isFavoriteOpen} closeModal={closeFavorite} />
       {isChatLogOpen && <ChatLog isOpen={isChatLogOpen} closeModal={closeChatLog} setProperties={setProperties} />}
     </>
   );

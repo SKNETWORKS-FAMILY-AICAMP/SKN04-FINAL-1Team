@@ -256,6 +256,8 @@ export const registerUser = async (data) => {
     }
 };
 
+window.registerUser = registerUser
+
 export const fetchChatSessions = async () => {
     try {
         const token = localStorage.getItem('token');
