@@ -35,20 +35,20 @@ LangGraph를 사용하여 고객 친화적인 대화 시스템과 부동산 매�
 ### 💼 역할 분담
 
 ### 👨‍💻 김정훈
-- **Backend**: Streamlit으로 구현된 페이지를 Django로 이식 (공동작업)
-- **데이터수집**: Airflow를 이용해서 데이터를 수집하고 API를 
+- **Backend**: Django를 이용해서 DB관리 및 API 관리
+- **데이터수집**: Airflow를 이용해서 데이터를 수집
 - **README.md 작성**
 
 ### 👨‍💻 김태욱
-- **Frontend**: Streamlit으로 구현된 페이지를 html 형식으로 변경 (공동작업) 
-- **요구사항 정의서 작성** : 
+- **Frontend**: React를 이용해서 전반적인 View 작성
+- **연동** : Backend와 Frontend 연동 
 
 ### 👩‍💻 박화랑
 - **AI**: LangChain 구성 및 연결, 질문-SQL Query 제작 (공동작업)
 - **RAG**: Chroma를 이용한 VectorDB 구축, RAG 구성 및 LLM 연동
 
 ### 👨‍💻 박진효
-- **AI**: Prompt 작성 및 모델 성능 개선
+- **AI**: Prompt 작성 및 모델 성능 개선, 질문-SQL Query 제작 (공동작업)
 - **AWS 배포**: Django로 제작된 페이지를 AWS환경에서 배포
 
 ---
@@ -189,7 +189,7 @@ sudo systemctl enable docker && service docker start
 
 
 ### 👨‍💻 김정훈
-- airflow를 통해 데이터 수집을 손쉽게 예약하고 운영할 수 있는 방법을 배울 수 있어서 좋았고 docker
+- Airflow를 통해 데이터 수집을 손쉽게 예약하고 운영할 수 있는 방법을 배울 수 있어서 좋았습니다
 
 ### 👨‍💻 김태욱
 - React를 처음 사용해봤는데 값진 경험이었습니다. 백엔드와 연결하는 과정이 몹시 힘들었지만 저한테 큰 도움이 되었습니다.
@@ -198,4 +198,4 @@ sudo systemctl enable docker && service docker start
 - LangGraph, FastApi 등 새로운 라이브러리와 프레임워크를 사용해보는 좋은 기회였습니다. 이번 프로젝트를 통해 프롬프트의 역할이 얼마나 중요한지 체감했고 TAG라는 논문을 알게 되었습니다.
 
 ### 👨‍💻 박진효
-- CoT, Few-shot Prompting 등 다양한 프롬프트 엔지니어링 기법을 활용해보고 모델의 성능 개선을 위해 여러 가지 방법을 시도해보는 좋은 경험이었습니다.
+- COT, Few-shot Prompting 등 다양한 프롬프트 엔지니어링 기법을 활용해보고 모델의 성능 개선을 위해 여러 가지 방법을 시도해보는 좋은 경험이었습니다.
